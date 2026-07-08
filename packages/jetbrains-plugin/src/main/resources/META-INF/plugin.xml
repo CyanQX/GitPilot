@@ -1,0 +1,56 @@
+// ============================================================
+// GitPilot JetBrains Plugin — plugin.xml
+// 新架构：Core 接口 + GitHub Provider + 平台 UI
+// ============================================================
+
+<idea-plugin>
+    <id>com.gitpilot</id>
+    <name>GitPilot</name>
+    <vendor email="support@gitpilot.dev" url="https://github.com/MuXi/GitPilot">GitPilot</vendor>
+
+    <description><![CDATA[
+        <h2>🚀 写代码 → 点部署 → GitHub 上就有了</h2>
+        <p><b>GitPilot 不是 Git 工具。</b>它是 GitHub 一键发布平台。</p>
+        <p>架构：Core 接口 + Provider 实现 + 平台 UI 三层分离。</p>
+        <ul>
+            <li>一键部署（自动 commit + push）</li>
+            <li>一键同步（pull + push）</li>
+            <li>GitHub 仓库管理</li>
+            <li>自动 Release 发布</li>
+            <li>智能文件过滤 + 密钥检测</li>
+        </ul>
+    ]]></description>
+
+    <idea-version since-build="233" until-build="242.*"/>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.vcs</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="GitPilot" anchor="right" icon="AllIcons.Actions.Upload"
+            factoryClass="com.gitpilot.ui.GitPilotToolWindowFactory"/>
+        <applicationService serviceImplementation="com.gitpilot.core.GitPilotSettings"/>
+        <projectService serviceImplementation="com.gitpilot.core.DeployOrchestrator"/>
+    </extensions>
+
+    <actions>
+        <group id="GitPilot.Actions" text="GitPilot" popup="true">
+            <action id="GitPilot.Deploy" class="com.gitpilot.actions.DeployAction"
+                text="Deploy" icon="AllIcons.Actions.Upload">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt D"/>
+            </action>
+            <action id="GitPilot.Sync" class="com.gitpilot.actions.SyncAction"
+                text="Sync" icon="AllIcons.Actions.Refresh">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt S"/>
+            </action>
+            <separator/>
+            <action id="GitPilot.Login" class="com.gitpilot.actions.LoginAction" text="Login to GitHub"/>
+            <action id="GitPilot.Logout" class="com.gitpilot.actions.LogoutAction" text="Logout"/>
+            <separator/>
+            <action id="GitPilot.CreateRepo" class="com.gitpilot.actions.CreateRepoAction" text="Create Repository"/>
+            <action id="GitPilot.SwitchRepo" class="com.gitpilot.actions.SwitchRepoAction" text="Switch Repository"/>
+            <separator/>
+            <action id="GitPilot.ConfigureBuild" class="com.gitpilot.actions.ConfigureBuildAction" text="Configure Build"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>

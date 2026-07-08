@@ -1,0 +1,108 @@
+# ============================================================
+# GitPilot — 密钥检测规则（外部化配置）
+# 更新规则不需要改代码，只改这个文件即可
+# ============================================================
+
+# ---- 高风险文件名 ----
+high_risk_files:
+  - pattern: "\\.env$"
+    reason: "环境变量文件"
+  - pattern: "\\.env\\.\\w+$"
+    reason: "环境变量文件（按环境）"
+  - pattern: "\\.pem$"
+    reason: "PEM 密钥文件"
+  - pattern: "\\.key$"
+    reason: "私钥文件"
+  - pattern: "\\.p12$"
+    reason: "PKCS12 证书"
+  - pattern: "\\.pfx$"
+    reason: "PFX 证书"
+  - pattern: "\\.keystore$"
+    reason: "Java 密钥库"
+  - pattern: "\\.jks$"
+    reason: "Java 密钥库"
+  - pattern: "credentials\\.json$"
+    reason: "云服务凭据文件"
+  - pattern: "service-account\\.json$"
+    reason: "服务账号密钥"
+  - pattern: "secrets\\.ya?ml$"
+    reason: "密钥配置文件"
+  - pattern: "id_rsa$"
+    reason: "SSH 私钥"
+  - pattern: "id_ed25519$"
+    reason: "SSH 私钥"
+  - pattern: "id_ecdsa$"
+    reason: "SSH 私钥"
+
+# ---- 中风险文件名 ----
+medium_risk_files:
+  - pattern: "\\.token$"
+    reason: "Token 文件"
+  - pattern: "\\.secret$"
+    reason: "Secret 文件"
+  - pattern: "\\.npmrc$"
+    reason: "npm 认证配置"
+  - pattern: "\\.pypirc$"
+    reason: "PyPI 认证配置"
+  - pattern: "\\.dockercfg$"
+    reason: "Docker 认证配置"
+  - pattern: "\\.git-credentials$"
+    reason: "Git 凭据文件"
+  - pattern: "\\.netrc$"
+    reason: "网络凭据文件"
+
+# ---- 内容检测规则 ----
+content_patterns:
+  # API Keys
+  - pattern: "(?:api[_-]?key|apikey|api[_-]?secret)\\s*[:=]\\s*['\"][^'\"]+['\"]"
+    type: "API Key"
+    severity: high
+
+  - pattern: "sk-[a-zA-Z0-9]{32,}"
+    type: "OpenAI API Key"
+    severity: high
+
+  - pattern: "ghp_[a-zA-Z0-9]{36}"
+    type: "GitHub Personal Access Token"
+    severity: high
+
+  - pattern: "github[_-]?token\\s*[:=]\\s*['\"][^'\"]+['\"]"
+    type: "GitHub Token"
+    severity: high
+
+  # AWS
+  - pattern: "AKIA[0-9A-Z]{16}"
+    type: "AWS Access Key"
+    severity: high
+
+  - pattern: "(?:aws[_-]?secret|aws[_-]?access[_-]?key[_-]?id)\\s*[:=]\\s*['\"][^'\"]+['\"]"
+    type: "AWS Credential"
+    severity: high
+
+  # Private Keys
+  - pattern: "-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----"
+    type: "Private Key"
+    severity: high
+
+  - pattern: "-----BEGIN PGP PRIVATE KEY BLOCK-----"
+    type: "PGP Private Key"
+    severity: high
+
+  # Connection Strings
+  - pattern: "(?:mongodb|mysql|postgres|redis|sqlserver)://[^/\\s]+:[^/\\s]+@"
+    type: "Database Connection String"
+    severity: high
+
+  - pattern: "jdbc:[a-z]+://[^/\\s]+"
+    type: "JDBC Connection String"
+    severity: high
+
+  # Auth Tokens
+  - pattern: "(?:jwt|bearer|auth[_-]?token)\\s*[:=]\\s*['\"][^'\"]{20,}['\"]"
+    type: "Auth Token"
+    severity: high
+
+  # Passwords
+  - pattern: "(?:password|passwd|pwd)\\s*[:=]\\s*['\"][^'\"]{3,}['\"]"
+    type: "Password"
+    severity: medium

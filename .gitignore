@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+*.vsix
+*.zip
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets & Environment
+.env
+*.pem
+*.key
+*.token
+
+# Logs
+*.log
+logs/
+
+# Gradle (JetBrains)
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# TypeScript
+*.tsbuildinfo
+
+# Test
+coverage/

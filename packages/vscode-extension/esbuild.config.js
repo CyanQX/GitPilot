@@ -1,0 +1,29 @@
+// GitPilot VS Code Extension — esbuild 构建
+// ============================================================
+const esbuild = require('esbuild');
+const isWatch = process.argv.includes('--watch');
+
+const config = {
+  entryPoints: ['src/extension.ts'],
+  bundle: true,
+  outfile: 'dist/extension.js',
+  external: ['vscode'],
+  format: 'cjs',
+  platform: 'node',
+  target: 'node18',
+  sourcemap: true,
+  minify: false,
+};
+
+async function main() {
+  if (isWatch) {
+    const ctx = await esbuild.context(config);
+    await ctx.watch();
+    console.log('[esbuild] watching...');
+  } else {
+    await esbuild.build(config);
+    console.log('[esbuild] build complete.');
+  }
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });

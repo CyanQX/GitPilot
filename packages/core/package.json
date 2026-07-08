@@ -1,0 +1,17 @@
+{
+  "name": "@gitpilot/core",
+  "version": "1.1.0",
+  "description": "GitPilot core — pure interfaces, models, and orchestration. ZERO platform dependencies.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "jest"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}

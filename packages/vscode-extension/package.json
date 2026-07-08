@@ -1,0 +1,91 @@
+{
+  "name": "gitpilot",
+  "displayName": "GitPilot",
+  "description": "🚀 写代码 → 点部署 → GitHub 上就有了。全程不离开 VS Code。",
+  "version": "1.3.1",
+  "publisher": "gitpilot",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gitpilot/gitpilot"
+  },
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["SCM Providers", "Other"],
+  "keywords": ["github", "deploy", "git", "automation", "release"],
+  "activationEvents": ["onStartupFinished", "onView:gitpilot-sidebar"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "gitpilot.deploy", "title": "GitPilot: Deploy", "icon": "$(cloud-upload)" },
+      { "command": "gitpilot.sync", "title": "GitPilot: Sync", "icon": "$(sync)" },
+      { "command": "gitpilot.login", "title": "GitPilot: Login to GitHub" },
+      { "command": "gitpilot.logout", "title": "GitPilot: Logout" },
+      { "command": "gitpilot.switchAccount", "title": "GitPilot: Switch Account" },
+      { "command": "gitpilot.createRepo", "title": "GitPilot: Create Repository" },
+      { "command": "gitpilot.deleteRepo", "title": "GitPilot: Delete Repository" },
+      { "command": "gitpilot.switchRepo", "title": "GitPilot: Switch Repository" },
+      { "command": "gitpilot.refreshRepos", "title": "GitPilot: Refresh Repository List" },
+      { "command": "gitpilot.refreshStatus", "title": "GitPilot: Refresh Status" },
+      { "command": "gitpilot.linkRepo", "title": "GitPilot: Link GitHub Repository" },
+      { "command": "gitpilot.showDeployLog", "title": "GitPilot: Show Deploy Log" },
+      { "command": "gitpilot.openOnGitHub", "title": "GitPilot: Open on GitHub" },
+      { "command": "gitpilot.configureBuild", "title": "GitPilot: Configure Build Command" }
+    ],
+    "viewsContainers": {
+      "activitybar": [{
+        "id": "gitpilot-sidebar",
+        "title": "GitPilot",
+        "icon": "$(cloud-upload)"
+      }]
+    },
+    "views": {
+      "gitpilot-sidebar": [{
+        "id": "gitpilot-main",
+        "name": "Deploy",
+        "type": "webview"
+      }]
+    },
+    "configuration": {
+      "title": "GitPilot",
+      "properties": {
+        "gitpilot.autoDeploy.onSave": { "type": "boolean", "default": false },
+        "gitpilot.autoDeploy.onSaveDelay": { "type": "number", "default": 3 },
+        "gitpilot.autoDeploy.scheduled": { "type": "boolean", "default": false },
+        "gitpilot.autoDeploy.scheduledInterval": { "type": "string", "default": "30min", "enum": ["10min", "30min", "1h", "2h", "4h", "daily"] },
+        "gitpilot.autoDeploy.afterBuild": { "type": "boolean", "default": false },
+        "gitpilot.autoDeploy.onExit": { "type": "boolean", "default": false },
+        "gitpilot.autoDeploy.onStartup": { "type": "boolean", "default": false },
+        "gitpilot.git.path": {
+          "type": "string",
+          "default": "",
+          "description": "Git executable path, for example C:\\\\Program Files\\\\Git\\\\cmd\\\\git.exe"
+        },
+        "gitpilot.build.command": { "type": "string", "default": "" },
+        "gitpilot.build.beforeDeploy": { "type": "boolean", "default": false },
+        "gitpilot.build.blockOnFailure": { "type": "boolean", "default": true },
+        "gitpilot.release.enabled": { "type": "boolean", "default": false },
+        "gitpilot.release.artifactPaths": { "type": "array", "default": [] },
+        "gitpilot.commit.messageTemplate": { "type": "string", "default": "deploy: auto-deploy by GitPilot" },
+        "gitpilot.security.blockSecrets": { "type": "boolean", "default": true }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "esbuild": "^0.20.0"
+  },
+  "dependencies": {
+    "@gitpilot/core": "file:../core",
+    "@gitpilot/provider-github": "file:../provider-github",
+    "@octokit/rest": "^21.0.0",
+    "simple-git": "^3.25.0",
+    "chokidar": "^3.6.0"
+  }
+}
