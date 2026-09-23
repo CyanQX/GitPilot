@@ -1,5 +1,5 @@
 // ============================================================
-// INotificationProvider — 用户通知抽象
+// INotificationProvider — user notification abstraction
 // VS Code → window.showInformationMessage
 // JetBrains → Notification API
 // ============================================================
@@ -20,6 +20,6 @@ export interface NotificationPayload {
 }
 
 export interface INotificationProvider {
-  /** 显示通知，返回用户点击的操作 ID */
+  /** Show a notification; returns the ID of the action the user clicked */
   show(payload: NotificationPayload): Promise<string | undefined>;
 }

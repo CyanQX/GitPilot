@@ -28,36 +28,36 @@ class GitPilotToolWindowFactory : ToolWindowFactory {
 class GitPilotPanel(private val project: Project) : JPanel(BorderLayout()) {
 
     private val settings = GitPilotSettings.instance
-    private val loginLabel = JLabel("未登录")
+    private val loginLabel = JLabel("Not signed in")
     private val repoLabel = JLabel("--")
     private val branchLabel = JLabel("--")
-    private val statusLabel = JLabel("就绪")
+    private val statusLabel = JLabel("Ready")
     private val deployBtn = JButton("🚀 Deploy")
     private val syncBtn = JButton("🔄 Sync")
     private val loginBtn = JButton("Login with GitHub")
-    private val buildLabel = JLabel("未配置")
+    private val buildLabel = JLabel("Not configured")
 
     init {
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         border = BorderFactory.createEmptyBorder(8, 8, 8, 8)
 
-        // 登录状态
+        // Login status
         val loginPanel = JPanel(BorderLayout())
         loginPanel.add(loginLabel, BorderLayout.CENTER)
         loginPanel.add(loginBtn, BorderLayout.EAST)
         loginPanel.maximumSize = Dimension(Int.MAX_VALUE, 30)
         add(loginPanel); add(Box.createVerticalStrut(8))
 
-        // 仓库信息
+        // Repository info
         val repoPanel = JPanel(BorderLayout())
-        repoPanel.border = BorderFactory.createTitledBorder("📦 当前仓库")
+        repoPanel.border = BorderFactory.createTitledBorder("📦 Current repository")
         val info = JPanel(); info.layout = BoxLayout(info, BoxLayout.Y_AXIS)
         info.add(repoLabel); info.add(branchLabel)
         repoPanel.add(info, BorderLayout.CENTER)
         repoPanel.maximumSize = Dimension(Int.MAX_VALUE, 60)
         add(repoPanel); add(Box.createVerticalStrut(8))
 
-        // 操作按钮
+        // Action buttons
         val btnPanel = JPanel(GridLayout(1, 2, 8, 0))
         deployBtn.addActionListener { doDeploy() }
         syncBtn.addActionListener { doSync() }
@@ -66,16 +66,16 @@ class GitPilotPanel(private val project: Project) : JPanel(BorderLayout()) {
         btnPanel.maximumSize = Dimension(Int.MAX_VALUE, 40)
         add(btnPanel); add(Box.createVerticalStrut(8))
 
-        // 构建命令
+        // Build command
         val buildPanel = JPanel(BorderLayout())
-        buildPanel.border = BorderFactory.createTitledBorder("🔨 构建命令")
+        buildPanel.border = BorderFactory.createTitledBorder("🔨 Build command")
         buildPanel.add(buildLabel, BorderLayout.CENTER)
         buildPanel.maximumSize = Dimension(Int.MAX_VALUE, 40)
         add(buildPanel); add(Box.createVerticalStrut(8))
 
-        // 状态
+        // Status
         val stPanel = JPanel(BorderLayout())
-        stPanel.add(JLabel("状态: "), BorderLayout.WEST)
+        stPanel.add(JLabel("Status: "), BorderLayout.WEST)
         stPanel.add(statusLabel, BorderLayout.CENTER)
         stPanel.maximumSize = Dimension(Int.MAX_VALUE, 30)
         add(stPanel)
@@ -96,11 +96,11 @@ class GitPilotPanel(private val project: Project) : JPanel(BorderLayout()) {
                 settings.commitMessageTemplate
             )
             ApplicationManager.getApplication().invokeLater {
-                if (result.success) Messages.showInfoMessage(project, "🚀 部署成功！", "GitPilot")
-                else Messages.showErrorDialog(project, "部署失败: ${result.error}", "GitPilot")
+                if (result.success) Messages.showInfoMessage(project, "🚀 Deployed!", "GitPilot")
+                else Messages.showErrorDialog(project, "Deploy failed: ${result.error}", "GitPilot")
                 refreshUI()
             }
-        }, "GitPilot 部署中...", true, project)
+        }, "GitPilot deploying...", true, project)
     }
 
     private fun doSync() {
@@ -115,42 +115,42 @@ class GitPilotPanel(private val project: Project) : JPanel(BorderLayout()) {
                 settings.buildBeforeDeploy, settings.blockOnBuildFailure
             )
             ApplicationManager.getApplication().invokeLater {
-                if (result.success) Messages.showInfoMessage(project, "🔄 同步完成！", "GitPilot")
-                else Messages.showErrorDialog(project, "同步失败: ${result.error}", "GitPilot")
+                if (result.success) Messages.showInfoMessage(project, "🔄 Sync complete!", "GitPilot")
+                else Messages.showErrorDialog(project, "Sync failed: ${result.error}", "GitPilot")
                 refreshUI()
             }
-        }, "GitPilot 同步中...", true, project)
+        }, "GitPilot syncing...", true, project)
     }
 
     private fun doLogin() {
-        val token = Messages.showPasswordDialog(project, "输入 GitHub Personal Access Token\n(需要 repo + workflow 权限)", "GitPilot Login", null)
+        val token = Messages.showPasswordDialog(project, "Enter your GitHub Personal Access Token\n(requires repo + workflow scopes)", "GitPilot Login", null)
         if (token.isNullOrEmpty()) return
 
         val repoProvider = GitHubRepoProvider(token)
         if (!repoProvider.validateToken()) {
-            Messages.showErrorDialog(project, "Token 无效", "GitPilot"); return
+            Messages.showErrorDialog(project, "Invalid token", "GitPilot"); return
         }
 
         val user = repoProvider.getCurrentUser()
         GitPilotSettings.saveToken(user ?: "unknown", token)
         settings.activeAccount = user ?: "unknown"
         refreshUI()
-        Messages.showInfoMessage(project, "✅ 已登录: $user", "GitPilot")
+        Messages.showInfoMessage(project, "✅ Signed in: $user", "GitPilot")
     }
 
     private fun refreshUI() {
         val hasToken = GitPilotSettings.getActiveToken() != null
-        loginLabel.text = if (hasToken) "✔ GitHub 已登录" else "未登录"
+        loginLabel.text = if (hasToken) "✔ GitHub signed in" else "Not signed in"
         loginLabel.foreground = if (hasToken) Color(0x4E, 0xC9, 0xB0) else Color.GRAY
         loginBtn.isVisible = !hasToken
         deployBtn.isEnabled = hasToken
         syncBtn.isEnabled = hasToken
-        buildLabel.text = settings.buildCommand.ifEmpty { "未配置" }
+        buildLabel.text = settings.buildCommand.ifEmpty { "Not configured" }
 
         val gitProvider = project.getService(IntelliJGitProvider::class.java)
         branchLabel.text = "🌿 ${gitProvider.getCurrentBranch() ?: "--"}"
         val hasChanges = gitProvider.hasChanges()
-        statusLabel.text = if (hasChanges) "📝 有待部署的变更" else "✅ 就绪"
+        statusLabel.text = if (hasChanges) "📝 Pending changes to deploy" else "✅ Ready"
         statusLabel.foreground = if (hasChanges) Color(0xE2, 0xB7, 0x14) else Color(0x4E, 0xC9, 0xB0)
     }
 }

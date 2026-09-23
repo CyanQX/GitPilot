@@ -1,5 +1,5 @@
 // ============================================================
-// 部署相关数据模型
+// Deploy data models
 // ============================================================
 
 export type DeployTrigger =
@@ -33,21 +33,21 @@ export interface DeployStep {
 }
 
 export interface DeployConfig {
-  /** 目标仓库 */
+  /** Target repository */
   repo: { owner: string; name: string; fullName: string };
-  /** 目标分支 */
+  /** Target branch */
   branch: string;
-  /** 提交消息模板 */
+  /** Commit message template */
   commitMessageTemplate?: string;
-  /** 触发模式 */
+  /** Trigger mode */
   trigger: DeployTrigger;
-  /** 是否部署前执行 build */
+  /** Whether to run a build before deploying */
   buildBeforeDeploy?: boolean;
-  /** build 失败时是否阻止部署 */
+  /** Whether to block the deploy when the build fails */
   blockOnBuildFailure?: boolean;
-  /** 构建命令 */
+  /** Build command */
   buildCommand?: string;
-  /** Release 配置 */
+  /** Release configuration */
   release?: {
     enabled: boolean;
     artifactPaths?: string[];

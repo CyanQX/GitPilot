@@ -1,6 +1,6 @@
 // ============================================================
-// VSCodeBuildProvider — 实现 IBuildProvider
-// 不猜测语言，只执行用户配置的命令
+// VSCodeBuildProvider — implements IBuildProvider
+// No language guessing; only runs the user-configured command
 // ============================================================
 
 import type { IBuildProvider, BuildConfig, BuildResult } from '@gitpilot/core';

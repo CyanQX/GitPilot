@@ -1,24 +1,24 @@
 // ============================================================
-// IDeployOrchestrator — 部署编排器
-// 这是用户看到的 "Deploy" 按钮背后调用的统一入口
-// Core 只定义接口，不包含任何平台特定逻辑
+// IDeployOrchestrator — deploy orchestrator
+// This is the unified entry point invoked behind the "Deploy" button
+// Core only defines the interface and contains no platform-specific logic
 // ============================================================
 
 import type { DeployConfig, DeployResult, DeployStep, DeployStatus } from '../models/deploy';
 
 export interface IDeployOrchestrator {
-  /** 执行完整部署流程 */
+  /** Run the full deploy flow */
   deploy(commitMessage?: string): Promise<DeployResult>;
 
-  /** 执行同步（Pull + Push） */
+  /** Run sync (Pull + Push) */
   sync(): Promise<DeployResult>;
 
-  /** 检查是否有待部署的变更 */
+  /** Check whether there are pending changes to deploy */
   hasPendingChanges(): Promise<boolean>;
 
-  /** 获取当前状态 */
+  /** Get the current status */
   getStatus(): DeployStatus;
 
-  /** 监听步骤变化（供 UI 更新） */
+  /** Listen for step changes (used by the UI to update) */
   onStepChange(callback: (status: DeployStatus, step: DeployStep) => void): void;
 }

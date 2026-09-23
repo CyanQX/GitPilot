@@ -1,32 +1,32 @@
 // ============================================================
-// IAuthProvider — 认证抽象
-// GitHub OAuth / GitLab PAT / Gitee Token → 统一为 Token
+// IAuthProvider — authentication abstraction
+// GitHub OAuth / GitLab PAT / Gitee Token → unified as Token
 // ============================================================
 
 import type { UserInfo, AuthToken } from '../models/auth';
 
 export interface IAuthProvider {
-  /** 平台标识 */
+  /** Platform identifier */
   readonly platform: string;
 
-  /** 获取授权 URL（OAuth Web Flow），可传入自定义 redirectUri */
+  /** Get the authorization URL (OAuth Web Flow); a custom redirectUri may be provided */
   getAuthorizationUrl(state?: string): string;
 
-  /** 用授权码换取 Token，可传入与授权 URL 相同的 redirectUri */
+  /** Exchange an authorization code for a Token; the same redirectUri as the authorization URL may be provided */
   exchangeCodeForToken(code: string): Promise<AuthToken>;
 
-  /** 验证 Token 是否有效 */
+  /** Validate whether a Token is valid */
   validateToken(token: string): Promise<boolean>;
 
-  /** 用 Token 获取用户信息 */
+  /** Get user info using a Token */
   getUserInfo(token: string): Promise<UserInfo>;
 
-  /** 刷新 Token */
+  /** Refresh a Token */
   refreshToken(refreshToken: string): Promise<AuthToken>;
 
-  /** 撤销 Token */
+  /** Revoke a Token */
   revokeToken(token: string): Promise<void>;
 
-  /** 获取授权所需的最小权限范围 */
+  /** Get the minimal scopes required for authorization */
   getRequiredScopes(): string[];
 }

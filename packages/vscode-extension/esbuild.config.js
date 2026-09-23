@@ -1,4 +1,4 @@
-// GitPilot VS Code Extension — esbuild 构建
+// GitPilot VS Code Extension — esbuild build
 // ============================================================
 const esbuild = require('esbuild');
 const isWatch = process.argv.includes('--watch');

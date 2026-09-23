@@ -1,57 +1,57 @@
 # ============================================================
-# GitPilot — 密钥检测规则（外部化配置）
-# 更新规则不需要改代码，只改这个文件即可
+# GitPilot — secret detection rules (externalized configuration)
+# Updating rules requires no code changes — only edit this file
 # ============================================================
 
-# ---- 高风险文件名 ----
+# ---- High-risk filenames ----
 high_risk_files:
   - pattern: "\\.env$"
-    reason: "环境变量文件"
+    reason: "Environment variable file"
   - pattern: "\\.env\\.\\w+$"
-    reason: "环境变量文件（按环境）"
+    reason: "Environment variable file (per environment)"
   - pattern: "\\.pem$"
-    reason: "PEM 密钥文件"
+    reason: "PEM key file"
   - pattern: "\\.key$"
-    reason: "私钥文件"
+    reason: "Private key file"
   - pattern: "\\.p12$"
-    reason: "PKCS12 证书"
+    reason: "PKCS12 certificate"
   - pattern: "\\.pfx$"
-    reason: "PFX 证书"
+    reason: "PFX certificate"
   - pattern: "\\.keystore$"
-    reason: "Java 密钥库"
+    reason: "Java keystore"
   - pattern: "\\.jks$"
-    reason: "Java 密钥库"
+    reason: "Java keystore"
   - pattern: "credentials\\.json$"
-    reason: "云服务凭据文件"
+    reason: "Cloud service credentials file"
   - pattern: "service-account\\.json$"
-    reason: "服务账号密钥"
+    reason: "Service account key"
   - pattern: "secrets\\.ya?ml$"
-    reason: "密钥配置文件"
+    reason: "Secrets configuration file"
   - pattern: "id_rsa$"
-    reason: "SSH 私钥"
+    reason: "SSH private key"
   - pattern: "id_ed25519$"
-    reason: "SSH 私钥"
+    reason: "SSH private key"
   - pattern: "id_ecdsa$"
-    reason: "SSH 私钥"
+    reason: "SSH private key"
 
-# ---- 中风险文件名 ----
+# ---- Medium-risk filenames ----
 medium_risk_files:
   - pattern: "\\.token$"
-    reason: "Token 文件"
+    reason: "Token file"
   - pattern: "\\.secret$"
-    reason: "Secret 文件"
+    reason: "Secret file"
   - pattern: "\\.npmrc$"
-    reason: "npm 认证配置"
+    reason: "npm auth configuration"
   - pattern: "\\.pypirc$"
-    reason: "PyPI 认证配置"
+    reason: "PyPI auth configuration"
   - pattern: "\\.dockercfg$"
-    reason: "Docker 认证配置"
+    reason: "Docker auth configuration"
   - pattern: "\\.git-credentials$"
-    reason: "Git 凭据文件"
+    reason: "Git credentials file"
   - pattern: "\\.netrc$"
-    reason: "网络凭据文件"
+    reason: "Network credentials file"
 
-# ---- 内容检测规则 ----
+# ---- Content detection rules ----
 content_patterns:
   # API Keys
   - pattern: "(?:api[_-]?key|apikey|api[_-]?secret)\\s*[:=]\\s*['\"][^'\"]+['\"]"

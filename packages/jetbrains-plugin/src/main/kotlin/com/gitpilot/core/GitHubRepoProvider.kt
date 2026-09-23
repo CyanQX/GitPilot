@@ -1,6 +1,6 @@
 // ============================================================
-// GitHubRepoProvider (Kotlin) — 实现 IRepoProvider
-// 对应 TS provider-github/GitHubRepositoryProvider.ts
+// GitHubRepoProvider (Kotlin) — implements IRepoProvider
+// Corresponds to the TS provider-github/GitHubRepositoryProvider.ts
 // ============================================================
 
 package com.gitpilot.core

@@ -1,239 +1,239 @@
 # GitPilot v2.0
 
-> 🚀 写代码 → 点部署 → GitHub 上就有了。全程不离开 IDE。
+> 🚀 Write code → Click Deploy → It's on GitHub. Never leave the IDE.
 
 ---
 
-## 📖 使用指南（手把手教学）
+## 📖 User Guide (Step-by-Step Tutorial)
 
-### 一、安装
+### 1. Installation
 
-1. 按 `Ctrl+Shift+P` → 输入 `Extensions: Install from VSIX`
-2. 选择 `gitpilot-1.x.x.vsix` → 安装完成
-3. 左侧活动栏出现 🚀 图标，点击打开 GitPilot 面板
-
----
-
-### 二、登录 GitHub
-
-#### 方式 1：PAT Token 登录（推荐）
-
-| 步骤 | 操作 |
-|------|------|
-| ① | 打开 https://github.com/settings/tokens |
-| ② | 点击 **Generate new token (classic)** |
-| ③ | 勾选 `repo` + `workflow` 权限 |
-| ④ | 点击生成 → **复制 Token**（`ghp_xxxx...`） |
-| ⑤ | 回到 VS Code，点 GitPilot 面板的 **「Login with GitHub」** |
-| ⑥ | 选择「🔑 Personal Access Token」→ 粘贴 Token → 回车 |
-
-#### 方式 2：浏览器 OAuth 登录（本人没试过这个，不行的话再反馈给我！）
-
-| 步骤 | 操作 |
-|------|------|
-| ① | 点 GitPilot 面板的 **「Login with GitHub」** |
-| ② | 选择「🔐 浏览器 OAuth 登录」 |
-| ③ | 选择浏览器（Edge / Chrome / Firefox...） |
-| ④ | 浏览器自动打开 GitHub 授权页面 → **点授权** |
-| ⑤ | 看到「授权成功」页面 → 自动完成登录 |
-
-> 登录成功后，侧边栏显示你的 GitHub 头像和用户名 ✅
+1. Press `Ctrl+Shift+P` → type `Extensions: Install from VSIX`
+2. Select `gitpilot-1.x.x.vsix` → installation complete
+3. A 🚀 icon appears in the left activity bar; click it to open the GitPilot panel
 
 ---
 
-### 三、创建仓库 & 关联
+### 2. Sign in to GitHub
 
-| 步骤 | 操作 |
-|------|------|
-| ① | 点击面板中的 **「+ 创建仓库」** |
-| ② | 输入仓库名（如 `my-project`）→ 回车 |
-| ③ | 选择「公开」或「私有」 |
-| ④ | 等待提示「✅ 已创建: CyanQX/my-project」 |
-| ⑤ | 自动完成：`git init` + `git remote add origin` + 侧边栏刷新 |
+#### Method 1: PAT Token Login (Recommended)
 
-> 如果你已有 GitHub 仓库，部署时如果提示「未关联远程仓库」，通知里会有 **「🔗 关联仓库」** 按钮，点击选择已有仓库即可。
+| Step | Action |
+|------|--------|
+| ① | Open https://github.com/settings/tokens |
+| ② | Click **Generate new token (classic)** |
+| ③ | Check the `repo` + `workflow` scopes |
+| ④ | Click generate → **copy the token** (`ghp_xxxx...`) |
+| ⑤ | Back in VS Code, click **"Login with GitHub"** on the GitPilot panel |
+| ⑥ | Choose "🔑 Personal Access Token" → paste the token → press Enter |
+
+#### Method 2: Browser OAuth Login (I haven't tried this one myself — if it doesn't work, please report back!)
+
+| Step | Action |
+|------|--------|
+| ① | Click **"Login with GitHub"** on the GitPilot panel |
+| ② | Choose "🔐 Browser OAuth Login" |
+| ③ | Select a browser (Edge / Chrome / Firefox...) |
+| ④ | The browser opens the GitHub authorization page automatically → **click Authorize** |
+| ⑤ | Once you see the "Authorization successful" page → login completes automatically |
+
+> After a successful login, the sidebar shows your GitHub avatar and username ✅
 
 ---
 
-### 四、部署（Deploy）
+### 3. Create a Repository & Link It
+
+| Step | Action |
+|------|--------|
+| ① | Click **"+ Create Repository"** in the panel |
+| ② | Enter a repository name (e.g. `my-project`) → press Enter |
+| ③ | Choose "Public" or "Private" |
+| ④ | Wait for the "✅ Created: CyanQX/my-project" message |
+| ⑤ | Everything happens automatically: `git init` + `git remote add origin` + sidebar refresh |
+
+> If you already have a GitHub repository and the deployment says "no remote repository linked", the notification includes a **"🔗 Link Repository"** button — click it and pick an existing repository.
+
+---
+
+### 4. Deploy
 
 ```
-写代码 → 点 🚀 Deploy → 自动 commit + push → GitHub 上就有了
+Write code → Click 🚀 Deploy → automatic commit + push → It's on GitHub
 ```
 
-**部署流程（全自动）：**
+**Deployment flow (fully automatic):**
 
-| 步骤 | GitPilot 在做什么 |
-|------|------------------|
-| ① 检查变更 | 扫描所有修改/新增/删除的文件 |
-| ② 智能过滤 | 自动排除 `node_modules/`、`.env`、密钥文件、构建产物等 |
-| ③ 暂存文件 | `git add -A` 暂存全部有效文件 |
-| ④ 提交 | `git commit -m "deploy: auto-deploy by GitPilot"` |
-| ⑤ 推送 | `git push origin main`（自动检测分支） |
-| ⑥ 通知 | 右下角弹出「🚀 部署成功！已暂存 47 个文件」 |
+| Step | What GitPilot does |
+|------|--------------------|
+| ① Check changes | Scans all modified/added/deleted files |
+| ② Smart filtering | Automatically excludes `node_modules/`, `.env`, secret files, build artifacts, etc. |
+| ③ Stage files | `git add -A` stages all valid files |
+| ④ Commit | `git commit -m "deploy: auto-deploy by GitPilot"` |
+| ⑤ Push | `git push origin main` (branch auto-detected) |
+| ⑥ Notify | Bottom-right popup: "🚀 Deployed! Staged 47 files" |
 
-**一键完成，无需手动 git 操作。**
+**One click, no manual git commands.**
 
 ---
 
-### 五、同步（Sync）
+### 5. Sync
 
 ```
-点 🔄 Sync → pull 远端 + push 本地 → 自动同步
+Click 🔄 Sync → pull remote + push local → auto-synced
 ```
 
-| 场景 | 说明 |
-|------|------|
-| 远端有更新 | 先 `git pull` 拉取最新代码 |
-| 本地有变更 | 自动执行完整 Deploy 流程 |
-| 无变更 | 跳过，不产生空提交 |
+| Scenario | Description |
+|----------|-------------|
+| Remote has updates | `git pull` first to fetch the latest code |
+| Local has changes | The full Deploy flow runs automatically |
+| No changes | Skipped, no empty commits |
 
 ---
 
-### 六、切换仓库
+### 6. Switch Repository
 
-| 步骤 | 操作 |
-|------|------|
-| ① | 点击仓库名旁的 **🔄 切换按钮** |
-| ② | 弹出你的 GitHub 仓库列表 |
-| ③ | 选择一个仓库 → 自动更新 `origin` → 刷新状态 |
-
----
-
-### 七、自动部署（可选配置）
-
-按 `Ctrl+,` 打开设置 → 搜索 `gitpilot`：
-
-| 配置项 | 说明 | 推荐值 |
-|--------|------|--------|
-| `autoDeploy.onSave` | 保存文件后自动部署 | `true` |
-| `autoDeploy.onSaveDelay` | 保存后延迟秒数（防抖） | `3` |
-| `autoDeploy.scheduled` | 定时自动部署 | 按需 |
-| `autoDeploy.scheduledInterval` | 定时间隔 | `30min` |
+| Step | Action |
+|------|--------|
+| ① | Click the **🔄 switch button** next to the repository name |
+| ② | Your GitHub repository list pops up |
+| ③ | Pick a repository → `origin` updates automatically → state refreshes |
 
 ---
 
-### 八、构建命令（可选）
+### 7. Auto Deploy (optional)
 
-如果你的项目需要先编译再部署：
+Press `Ctrl+,` to open Settings → search for `gitpilot`:
 
-| 步骤 | 操作 |
-|------|------|
-| ① | 点构建命令旁的 **⚙️ 齿轮** |
-| ② | 输入构建命令（如 `npm run build`） |
-| ③ | 选择「部署前执行 Build」→ 是 |
-| ④ | 选择「Build 失败时阻止部署」→ 是 |
-
----
-
-### 九、状态刷新
-
-点击仓库名旁的 **🔃 刷新按钮**：
-- 自动拉取 GitHub 仓库列表 + Git 本地状态
-- 3~7 秒完成（根据网络速度）
-- 超时 10 秒 → 提示「报错！请检查网络是否正常」
+| Setting | Description | Recommended |
+|---------|-------------|-------------|
+| `autoDeploy.onSave` | Deploy automatically after saving a file | `true` |
+| `autoDeploy.onSaveDelay` | Delay in seconds after save (debounce) | `3` |
+| `autoDeploy.scheduled` | Scheduled auto deploy | As needed |
+| `autoDeploy.scheduledInterval` | Schedule interval | `30min` |
 
 ---
 
-### 十、常见问题
+### 8. Build Command (optional)
 
-| 问题 | 解决方法 |
-|------|---------|
-| 「远程仓库未配置」 | 点击通知里的「🔗 关联仓库」→ 选择已有仓库 |
-| 「src refspec main does not match」 | 切换到了不同的默认分支，点击 Sync 自动修复 |
-| 登录后切换标签页回来显示未登录 | v1.1.1+ 已修复，升级版本 |
-| 只上传了 README.md | v1.2.8+ 已修复 `git add -A`，升级版本 |
-| 点了「在 GitHub 上查看」没反应 | v1.2.6+ 已修复，优先用 Edge 打开 |
+If your project needs to be compiled before deployment:
+
+| Step | Action |
+|------|--------|
+| ① | Click the **⚙️ gear** next to the build command |
+| ② | Enter the build command (e.g. `npm run build`) |
+| ③ | Choose "Run Build before deploy" → Yes |
+| ④ | Choose "Block deploy when Build fails" → Yes |
 
 ---
 
-## 🏗️ 架构设计
+### 9. Status Refresh
+
+Click the **🔃 refresh button** next to the repository name:
+- Fetches your GitHub repository list + local Git status
+- Takes 3–7 seconds (depending on network speed)
+- Timeout after 10 seconds → "Error! Please check your network connection"
+
+---
+
+### 10. FAQ
+
+| Problem | Solution |
+|---------|----------|
+| "Remote repository not configured" | Click "🔗 Link Repository" in the notification → pick an existing repository |
+| "src refspec main does not match" | You switched to a different default branch; click Sync to auto-fix |
+| After login, switching tabs shows "not logged in" | Fixed in v1.1.1+, upgrade |
+| Only README.md was uploaded | Fixed `git add -A` in v1.2.8+, upgrade |
+| Clicking "View on GitHub" does nothing | Fixed in v1.2.6+, opens with Edge first |
+
+---
+
+## 🏗️ Architecture
 
 ```
 GitPilot/
 ├── packages/
 │   │
-│   ├── core/                           # 🔷 纯接口层（零平台依赖）
-│   │   ├── interfaces/                 #   8 个抽象接口
-│   │   ├── models/                     #   纯数据类型
-│   │   ├── deploy/                     #   部署编排器（依赖接口）
-│   │   ├── security/                   #   密钥检测 + Token 管理 + 过滤
-│   │   │   └── patterns.yml            #   ⭐ 规则外部化，更新不改代码
-│   │   └── utils/                      #   日志
+│   ├── core/                           # 🔷 Pure interface layer (zero platform dependencies)
+│   │   ├── interfaces/                 #   8 abstract interfaces
+│   │   ├── models/                     #   Pure data types
+│   │   ├── deploy/                     #   Deploy orchestrator (depends on interfaces)
+│   │   ├── security/                   #   Secret detection + Token management + Filtering
+│   │   │   └── patterns.yml            #   ⭐ Rules externalized — update rules without touching code
+│   │   └── utils/                      #   Logging
 │   │
 │   ├── provider-github/                # 🟢 GitHub Provider
 │   │   ├── GitHubRepositoryProvider    #   → IRepositoryProvider
 │   │   ├── GitHubAuthProvider          #   → IAuthProvider
 │   │   └── GitHubReleaseProvider       #   → IReleaseProvider
 │   │
-│   ├── vscode-extension/               # 🔵 VS Code 扩展
-│   │   ├── extension.ts                #   组装 Provider → Orchestrator
-│   │   └── providers/                  #   平台特定实现 (simple-git 等)
+│   ├── vscode-extension/               # 🔵 VS Code extension
+│   │   ├── extension.ts                #   Wires Providers → Orchestrator
+│   │   └── providers/                  #   Platform-specific implementations (simple-git, etc.)
 │   │
-│   └── jetbrains-plugin/               # 🟣 JetBrains 插件 (Kotlin)
+│   └── jetbrains-plugin/               # 🟣 JetBrains plugin (Kotlin)
 │       └── src/main/kotlin/com/gitpilot/
-│           ├── core/                   #   Kotlin 版接口 + Provider + Orchestrator
-│           ├── ui/                     #   工具窗口 UI
-│           └── actions/                #   Deploy / Sync / Login 动作
+│           ├── core/                   #   Kotlin interfaces + Provider + Orchestrator
+│           ├── ui/                     #   Tool window UI
+│           └── actions/                #   Deploy / Sync / Login actions
 │
-├── docs/                               # 设计文档
-└── scripts/                            # 开发脚本
+├── docs/                               # Design documents
+└── scripts/                            # Development scripts
 ```
 
 ---
 
-## 🎯 核心设计原则
+## 🎯 Core Design Principles
 
-### 1. Core 不依赖任何平台
+### 1. Core depends on no platform
 
 ```
-❌ 旧架构：core/github/api.ts  ← Core 直接包含 GitHub API
-✅ 新架构：core/interfaces/    ← Core 只定义接口
-           provider-github/    ← GitHub 是实现
+❌ Old: core/github/api.ts  ← Core directly contains the GitHub API
+✅ New: core/interfaces/    ← Core only defines interfaces
+        provider-github/    ← GitHub is an implementation
 ```
 
-**以后加 GitLab：只需新增 `provider-gitlab/`，Core 一行不改。**
+**Adding GitLab later: just add `provider-gitlab/`, zero changes to Core.**
 
-### 2. Provider 模式 — 全部分离
+### 2. Provider pattern — everything separated
 
-| 接口 | GitHub 实现 | VS Code 平台实现 | JetBrains 平台实现 |
-|------|------------|-----------------|-------------------|
+| Interface | GitHub implementation | VS Code platform implementation | JetBrains platform implementation |
+|-----------|-----------------------|--------------------------------|-----------------------------------|
 | `IRepositoryProvider` | `GitHubRepositoryProvider` (Octokit) | - | `GitHubRepoProvider` (OkHttp) |
 | `IAuthProvider` | `GitHubAuthProvider` (OAuth) | - | - |
 | `IReleaseProvider` | `GitHubReleaseProvider` (Octokit) | - | - |
 | `IGitProvider` | - | `VSCodeGitProvider` (simple-git) | `IntelliJGitProvider` (Git4Idea) |
-| `IBuildProvider` | - | `VSCodeBuildProvider` | 内联实现 |
+| `IBuildProvider` | - | `VSCodeBuildProvider` | Inline implementation |
 | `ISecretStorage` | - | `VSCodeSecretStorage` | `PasswordSafe` |
-| `INotificationProvider` | - | `VSCodeNotificationProvider` | 内联实现 |
+| `INotificationProvider` | - | `VSCodeNotificationProvider` | Inline implementation |
 
-### 3. Build 不再猜测语言
-
-```
-❌ 旧：11 种语言自动检测 → 维护爆炸
-✅ 新：用户自己写命令 → npm run build / cargo build / RunUAT BuildPlugin
-```
-
-### 4. 密钥规则外部化
+### 3. Build no longer guesses the language
 
 ```
-❌ 旧：30+ 种模式硬编码在 TS 中
-✅ 新：packages/core/src/security/patterns.yml → 更新规则不改代码
+❌ Old: 11 languages auto-detected → maintenance explosion
+✅ New: the user writes the command → npm run build / cargo build / RunUAT BuildPlugin
+```
+
+### 4. Secret rules externalized
+
+```
+❌ Old: 30+ patterns hard-coded in TS
+✅ New: packages/core/src/security/patterns.yml → update rules without code changes
 ```
 
 ---
 
-## 🚀 开发者快速开始
+## 🚀 Developer Quick Start
 
-### VS Code 扩展
+### VS Code extension
 
 ```bash
 cd packages/vscode-extension
 npm install
 npm run compile
-# F5 启动调试
+# F5 to start debugging
 ```
 
-### JetBrains 插件
+### JetBrains plugin
 
 ```bash
 cd packages/jetbrains-plugin
@@ -242,24 +242,24 @@ cd packages/jetbrains-plugin
 
 ---
 
-## 📋 扩展路线（基于新架构）
+## 📋 Extension Roadmap (based on the new architecture)
 
-| 新增内容 | 改动范围 | 改动量 |
-|----------|---------|--------|
-| **GitLab 支持** | 新增 `packages/provider-gitlab/` | ~200 行 |
-| **Gitee 支持** | 新增 `packages/provider-gitee/` | ~150 行 |
-| **Azure DevOps** | 新增 `packages/provider-azure/` | ~200 行 |
-| **Cursor IDE** | 新增 `packages/cursor-extension/` | 复用 VS Code 大部分代码 |
-| **新的密钥规则** | 编辑 `patterns.yml` | 0 行代码 |
+| New feature | Scope of change | Effort |
+|-------------|-----------------|--------|
+| **GitLab support** | Add `packages/provider-gitlab/` | ~200 lines |
+| **Gitee support** | Add `packages/provider-gitee/` | ~150 lines |
+| **Azure DevOps** | Add `packages/provider-azure/` | ~200 lines |
+| **Cursor IDE** | Add `packages/cursor-extension/` | Reuses most VS Code code |
+| **New secret rules** | Edit `patterns.yml` | 0 lines of code |
 
 ---
 
-## 📊 架构评分
+## 📊 Architecture Scorecard
 
-| 维度 | 评分 | 说明 |
-|------|------|------|
-| 分层设计 | ⭐⭐⭐⭐⭐ | Core / Provider / Platform 三层清晰 |
-| 接口抽象 | ⭐⭐⭐⭐⭐ | 8 个接口覆盖所有扩展点 |
-| 平台独立性 | ⭐⭐⭐⭐⭐ | Core 零平台依赖 |
-| 可扩展性 | ⭐⭐⭐⭐⭐ | 新平台 = 新 Provider，不改 Core |
-| 可维护性 | ⭐⭐⭐⭐⭐ | 规则外部化、Build 不猜测 |
+| Dimension | Rating | Notes |
+|-----------|--------|-------|
+| Layered design | ⭐⭐⭐⭐⭐ | Core / Provider / Platform — three clear layers |
+| Interface abstraction | ⭐⭐⭐⭐⭐ | 8 interfaces covering all extension points |
+| Platform independence | ⭐⭐⭐⭐⭐ | Core has zero platform dependencies |
+| Extensibility | ⭐⭐⭐⭐⭐ | New platform = new Provider, no Core changes |
+| Maintainability | ⭐⭐⭐⭐⭐ | Externalized rules, Build doesn't guess |

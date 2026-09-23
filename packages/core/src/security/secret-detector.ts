@@ -1,6 +1,6 @@
 // ============================================================
-// SecretDetector — 密钥检测器
-// 规则从 patterns.yml 加载，更新规则不改代码
+// SecretDetector — secret detector
+// Rules are loaded from patterns.yml; updating rules requires no code changes
 // ============================================================
 
 import * as fs from 'fs';
@@ -30,7 +30,7 @@ export class SecretDetector {
     this.rules = this.loadRules(rulesPath);
   }
 
-  /** 从 YAML 文件加载规则 */
+  /** Load rules from a YAML file */
   private loadRules(rulesPath: string): any {
     try {
       if (fs.existsSync(rulesPath)) {
@@ -38,14 +38,14 @@ export class SecretDetector {
         return this.parseSimpleYaml(content);
       }
     } catch (error) {
-      this.logger.warn(`无法加载规则文件: ${rulesPath}`);
+      this.logger.warn(`Unable to load the rules file: ${rulesPath}`);
     }
     return this.getDefaultRules();
   }
 
-  /** 简易 YAML 解析（不依赖外部库） */
+  /** Simple YAML parsing (no external dependency) */
   private parseSimpleYaml(content: string): any {
-    // 简单两层 YAML 解析，足够 patterns.yml 使用
+    // Simple two-level YAML parsing, sufficient for patterns.yml
     const result: any = {};
     let currentSection = '';
     const listItems: any[] = [];
@@ -55,14 +55,14 @@ export class SecretDetector {
       if (!trimmed || trimmed.startsWith('#')) continue;
 
       if (trimmed.endsWith(':') && !trimmed.startsWith('-')) {
-        // 新 section
+        // new section
         if (currentSection && listItems.length > 0) {
           result[currentSection] = [...listItems];
           listItems.length = 0;
         }
         currentSection = trimmed.replace(/:$/, '');
       } else if (trimmed.startsWith('- pattern:') || trimmed.startsWith('- type:')) {
-        // 列表项
+        // list item
         if (listItems.length === 0 || (trimmed.startsWith('- pattern:') && listItems[listItems.length - 1]?.pattern)) {
           listItems.push({});
         }
@@ -88,13 +88,13 @@ export class SecretDetector {
     return result;
   }
 
-  /** 内置兜底规则 */
+  /** Built-in fallback rules */
   private getDefaultRules(): any {
     return {
       high_risk_files: [
-        { pattern: '\\.env$', reason: '环境变量文件' },
-        { pattern: '\\.pem$', reason: 'PEM 密钥文件' },
-        { pattern: '\\.key$', reason: '私钥文件' },
+        { pattern: '\\.env$', reason: 'Environment variable file' },
+        { pattern: '\\.pem$', reason: 'PEM key file' },
+        { pattern: '\\.key$', reason: 'Private key file' },
       ],
       content_patterns: [
         { pattern: 'ghp_[a-zA-Z0-9]{36}', type: 'GitHub Token', severity: 'high' },
@@ -102,13 +102,13 @@ export class SecretDetector {
     };
   }
 
-  /** 根据文件名检测 */
+  /** Detect by filename */
   detectByFilename(filename: string): SecretMatch | null {
     if (!this.enabled) return null;
 
     const basename = path.basename(filename);
 
-    // 高风险
+    // High risk
     for (const rule of this.rules.high_risk_files ?? []) {
       try {
         if (new RegExp(rule.pattern, 'i').test(basename)) {
@@ -116,13 +116,13 @@ export class SecretDetector {
             file: filename,
             type: 'High-risk file',
             severity: 'high',
-            reason: rule.reason ?? `匹配高风险模式: ${rule.pattern}`,
+            reason: rule.reason ?? `Matched a high-risk pattern: ${rule.pattern}`,
           };
         }
-      } catch { /* 无效正则，跳过 */ }
+      } catch { /* invalid regex, skip */ }
     }
 
-    // 中风险
+    // Medium risk
     for (const rule of this.rules.medium_risk_files ?? []) {
       try {
         if (new RegExp(rule.pattern, 'i').test(basename)) {
@@ -130,7 +130,7 @@ export class SecretDetector {
             file: filename,
             type: 'Medium-risk file',
             severity: 'medium',
-            reason: rule.reason ?? `匹配中风险模式: ${rule.pattern}`,
+            reason: rule.reason ?? `Matched a medium-risk pattern: ${rule.pattern}`,
           };
         }
       } catch { /* skip */ }
@@ -139,7 +139,7 @@ export class SecretDetector {
     return null;
   }
 
-  /** 根据内容检测 */
+  /** Detect by content */
   detectByContent(filePath: string, content: string): SecretMatch[] {
     if (!this.enabled) return [];
     if (content.length > this.maxFileSize) return [];
@@ -159,7 +159,7 @@ export class SecretDetector {
               line: i + 1,
               match: this.mask(match[0]),
               severity: rule.severity ?? 'high',
-              reason: `第 ${i + 1} 行检测到 ${rule.type ?? '密钥'}`,
+              reason: `Detected ${rule.type ?? 'secret'} on line ${i + 1}`,
             });
           }
         }

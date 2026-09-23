@@ -1,16 +1,17 @@
 // ============================================================
-// IBuildProvider — 构建抽象
-// 不猜测语言，用户自己写命令。插件只负责执行。
+// IBuildProvider — build abstraction
+// No language guessing; the user provides the command and the
+// plugin only executes it.
 // ============================================================
 
 export interface BuildConfig {
-  /** 用户自定义的构建命令（如 npm run build） */
+  /** User-defined build command (e.g. npm run build) */
   command: string;
-  /** 工作目录 */
+  /** Working directory */
   cwd?: string;
-  /** 超时时间（ms），默认 5 分钟 */
+  /** Timeout in ms; defaults to 5 minutes */
   timeout?: number;
-  /** 环境变量 */
+  /** Environment variables */
   env?: Record<string, string>;
 }
 
@@ -23,6 +24,6 @@ export interface BuildResult {
 }
 
 export interface IBuildProvider {
-  /** 执行构建命令（用户自定义，不猜测语言） */
+  /** Run the build command (user-defined, no language guessing) */
   runBuild(config: BuildConfig): Promise<BuildResult>;
 }

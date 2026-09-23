@@ -1,5 +1,5 @@
 // ============================================================
-// Logger — 纯日志工具（零平台依赖）
+// Logger — pure logging utility (zero platform dependencies)
 // ============================================================
 
 export enum LogLevel { DEBUG = 0, INFO = 1, WARN = 2, ERROR = 3 }
@@ -46,7 +46,7 @@ export class Logger {
     if (Logger.history.length > Logger.maxHistory) Logger.history.shift();
 
     for (const listener of Logger.listeners) {
-      try { listener(entry); } catch { /* 不因监听器异常中断 */ }
+      try { listener(entry); } catch { /* never break because of a failing listener */ }
     }
   }
 }

@@ -1,53 +1,53 @@
 // ============================================================
-// IGitProvider — Git 操作抽象
-// 不同平台用不同实现（VS Code → simple-git，JetBrains → Git4Idea）
+// IGitProvider — Git operations abstraction
+// Each platform uses its own implementation (VS Code → simple-git, JetBrains → Git4Idea)
 // ============================================================
 
 import type { GitStatus, CommitResult, PushResult } from '../models/git';
 
 export interface IGitProvider {
-  /** 检查是否为 Git 仓库 */
+  /** Check whether this is a Git repository */
   isRepo(): Promise<boolean>;
 
-  /** 初始化仓库 */
+  /** Initialize the repository */
   init(): Promise<void>;
 
-  /** 获取工作区状态 */
+  /** Get the working tree status */
   getStatus(): Promise<GitStatus>;
 
-  /** 是否有未提交的变更 */
+  /** Whether there are uncommitted changes */
   hasChanges(): Promise<boolean>;
 
-  /** 暂存所有文件，排除指定文件（密钥/构建产物等） */
+  /** Stage all files, excluding the given ones (secrets/build artifacts, etc.) */
   stageFiles(excludeFiles?: string[]): Promise<void>;
 
-  /** 获取当前已暂存的文件列表 */
+  /** Get the list of currently staged files */
   getStagedFiles(): Promise<string[]>;
 
-  /** 提交 */
+  /** Commit */
   commit(message: string): Promise<CommitResult>;
 
-  /** 推送（必须先检查远端，拒绝 non-fast-forward） */
+  /** Push (must check the remote first and reject non-fast-forward) */
   push(remote?: string, branch?: string): Promise<PushResult>;
 
-  /** 拉取 */
+  /** Pull */
   pull(remote?: string, branch?: string): Promise<{ success: boolean; error?: string }>;
 
-  /** 获取当前分支 */
+  /** Get the current branch */
   getCurrentBranch(): Promise<string>;
 
-  /** 获取最新提交哈希 */
+  /** Get the latest commit hash */
   getLatestCommitHash(): Promise<string | null>;
 
-  /** 获取远端 URL */
+  /** Get the remote URL */
   getRemoteUrl(remote?: string): Promise<string | null>;
 
-  /** 列出本地分支 */
+  /** List local branches */
   listBranches(): Promise<string[]>;
 
-  /** 切换分支 */
+  /** Check out a branch */
   checkout(branch: string): Promise<void>;
 
-  /** 添加远端 */
+  /** Add a remote */
   addRemote(name: string, url: string): Promise<void>;
 }

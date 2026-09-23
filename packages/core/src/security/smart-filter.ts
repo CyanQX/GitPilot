@@ -1,7 +1,7 @@
 // ============================================================
-// SmartFilter — 智能文件过滤
-// 兼容 .gitignore + 内置规则 + 密钥文件拦截
-// 不依赖任何平台
+// SmartFilter — smart file filtering
+// Compatible with .gitignore + built-in rules + secret file blocking
+// Platform independent
 // ============================================================
 
 import * as fs from 'fs';
@@ -33,7 +33,7 @@ export class SmartFilter {
   constructor(workspaceRoot: string, options?: { extraIgnores?: string[]; blockSecrets?: boolean }) {
     this.blockSecrets = options?.blockSecrets ?? true;
 
-    // 加载 .gitignore
+    // Load .gitignore
     this.ignorePatterns = [...BUILTIN_IGNORES];
     const gitignorePath = path.join(workspaceRoot, '.gitignore');
     if (fs.existsSync(gitignorePath)) {
@@ -52,7 +52,7 @@ export class SmartFilter {
     }
   }
 
-  /** 过滤文件列表 */
+  /** Filter a list of files */
   filter(files: string[]): FilterResult {
     const allowed: string[] = [];
     const blocked: Array<{ file: string; reason: string }> = [];
@@ -68,7 +68,7 @@ export class SmartFilter {
     return { allowed, blocked };
   }
 
-  /** 单个文件判断 */
+  /** Decide about a single file */
   shouldIgnore(filePath: string): boolean {
     const basename = path.basename(filePath);
 
@@ -81,7 +81,7 @@ export class SmartFilter {
   }
 
   private matchSimple(pattern: string, target: string): boolean {
-    // 简单 glob 匹配（不引入 micromatch 依赖）
+    // Simple glob matching (no micromatch dependency)
     if (pattern === target) return true;
     if (pattern.endsWith('/') && target.startsWith(pattern)) return true;
     if (pattern.startsWith('*.')) {
@@ -98,11 +98,11 @@ export class SmartFilter {
 
   private getReason(filePath: string): string {
     const basename = path.basename(filePath);
-    if (basename.startsWith('.env')) return '环境变量文件';
-    if (basename.endsWith('.pem') || basename.endsWith('.key')) return '密钥文件';
-    if (filePath.includes('node_modules/')) return '依赖目录';
-    if (filePath.includes('.git/')) return 'Git 内部文件';
-    if (filePath.includes('dist/') || filePath.includes('build/')) return '构建产物';
-    return '匹配忽略规则';
+    if (basename.startsWith('.env')) return 'Environment variable file';
+    if (basename.endsWith('.pem') || basename.endsWith('.key')) return 'Key file';
+    if (filePath.includes('node_modules/')) return 'Dependency directory';
+    if (filePath.includes('.git/')) return 'Git internal file';
+    if (filePath.includes('dist/') || filePath.includes('build/')) return 'Build artifact';
+    return 'Matched an ignore rule';
   }
 }

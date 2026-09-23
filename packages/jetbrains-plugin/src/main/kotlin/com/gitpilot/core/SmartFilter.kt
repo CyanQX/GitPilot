@@ -1,7 +1,7 @@
 // ============================================================
 // GitPilot JetBrains — SmartFilter (Kotlin)
-// 智能文件过滤：.gitignore + 内置规则 + 密钥检测
-// 完全对标 VS Code smart-filter.ts
+// Smart file filtering: .gitignore + built-in rules + secret detection
+// Fully aligned with VS Code smart-filter.ts
 // ============================================================
 
 package com.gitpilot.core
@@ -13,9 +13,9 @@ class SmartFilter(workspaceRoot: String, blockSecrets: Boolean = true) {
     private val ignorePatterns = mutableListOf<String>()
 
     init {
-        // 内置忽略
+        // Built-in ignores
         ignorePatterns.addAll(BUILTIN_IGNORES)
-        // 加载 .gitignore
+        // Load .gitignore
         val gitignore = File(workspaceRoot, ".gitignore")
         if (gitignore.exists()) {
             gitignore.readLines().forEach { line ->
@@ -25,7 +25,7 @@ class SmartFilter(workspaceRoot: String, blockSecrets: Boolean = true) {
                 }
             }
         }
-        // 密钥文件
+        // Secret files
         if (blockSecrets) ignorePatterns.addAll(SECRET_FILES)
     }
 
@@ -64,12 +64,12 @@ class SmartFilter(workspaceRoot: String, blockSecrets: Boolean = true) {
     private fun getReason(filePath: String): String {
         val basename = File(filePath).name
         return when {
-            basename.startsWith(".env") -> "环境变量文件"
-            basename.endsWith(".pem") || basename.endsWith(".key") -> "密钥文件"
-            filePath.contains("node_modules/") -> "依赖目录"
-            filePath.contains(".git/") -> "Git 内部文件"
-            filePath.contains("dist/") || filePath.contains("build/") -> "构建产物"
-            else -> "匹配忽略规则"
+            basename.startsWith(".env") -> "Environment variable file"
+            basename.endsWith(".pem") || basename.endsWith(".key") -> "Key file"
+            filePath.contains("node_modules/") -> "Dependency directory"
+            filePath.contains(".git/") -> "Git internal file"
+            filePath.contains("dist/") || filePath.contains("build/") -> "Build artifact"
+            else -> "Matched an ignore rule"
         }
     }
 

@@ -1,16 +1,16 @@
 // ============================================================
-// @gitpilot/core — 统一导出
+// @gitpilot/core — unified exports
 //
-// Core 只导出三样东西：
-//   1. Interfaces  — 抽象接口（平台无关）
-//   2. Models      — 纯数据类型
-//   3. Orchestrator — 部署编排器（依赖接口，不依赖平台）
+// Core exports only three things:
+//   1. Interfaces   — abstract interfaces (platform-agnostic)
+//   2. Models       — pure data types
+//   3. Orchestrator — deploy orchestrator (depends on interfaces, not platforms)
 //
-// Core 不包含：
-//   ❌ GitHub API（那是 Provider 的事）
-//   ❌ VS Code API（那是 extension 的事）
-//   ❌ IntelliJ API（那是 plugin 的事）
-//   ❌ 任何平台特定的 import
+// Core does NOT contain:
+//   ❌ GitHub API (that's the Provider's job)
+//   ❌ VS Code API (that's the extension's job)
+//   ❌ IntelliJ API (that's the plugin's job)
+//   ❌ any platform-specific imports
 // ============================================================
 
 // ── Interfaces ──

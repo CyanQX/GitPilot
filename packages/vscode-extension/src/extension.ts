@@ -1,12 +1,12 @@
 // ============================================================
-// GitPilot VS Code Extension — 入口
+// GitPilot VS Code Extension — entry point
 //
-// 架构：
-//   Core (接口) ← Provider (GitHub 实现)
-//   Core (接口) ← VSCode Provider (平台特定实现)
-//   Core (DeployOrchestrator) ← 全部 Provider
+// Architecture:
+//   Core (interfaces) ← Provider (GitHub implementation)
+//   Core (interfaces) ← VSCode Provider (platform-specific implementation)
+//   Core (DeployOrchestrator) ← all Providers
 //
-// Core 不知道 VS Code，不知道 GitHub。
+// Core does not know about VS Code, nor about GitHub.
 // ============================================================
 
 import * as vscode from 'vscode';
@@ -31,7 +31,7 @@ import { VSCodeFileWatcherProvider } from './providers/vscode-file-watcher-provi
 import { SidebarProvider } from './ui/sidebar-provider';
 import { promptBrowserSelection, performBrowserOAuth } from './providers/browser-auth-handler';
 
-// ---- 全局状态 ----
+// ---- Global state ----
 let orchestrator: DeployOrchestrator | null = null;
 let tokenManager: TokenManager;
 let repoProvider: GitHubRepositoryProvider | null = null;
@@ -52,67 +52,67 @@ const logger = new Logger('VSCode');
 const GIT_NOT_FOUND_PREFIX = 'GIT_NOT_FOUND:';
 const NOT_GIT_REPO_PREFIX = 'NOT_GIT_REPO:';
 const GIT_AUTHOR_MISSING_PREFIX = 'GIT_AUTHOR_MISSING:';
-// ⭐ 替换为你的 GitHub OAuth App Client ID 即可启用浏览器 OAuth 登录
-//    创建地址: https://github.com/settings/developers → New OAuth App
+// ⭐ Replace with your GitHub OAuth App Client ID to enable browser OAuth login
+//    Create one at: https://github.com/settings/developers → New OAuth App
 //    Homepage URL: http://localhost:52134
 //    Callback URL: http://localhost:52134/callback
 const OAUTH_CLIENT_ID: string = 'your-github-oauth-app-client-id';
 
-/** 检测 OAuth 是否已配置（非占位符） */
+/** Check whether OAuth is configured (not a placeholder) */
 function isOAuthConfigured(): boolean {
   return Boolean(OAUTH_CLIENT_ID && OAUTH_CLIENT_ID !== 'your-github-oauth-app-client-id' && OAUTH_CLIENT_ID.length > 5);
 }
 
-// ---- 激活 ----
+// ---- Activation ----
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   try {
-    logger.info('GitPilot 正在激活...');
+    logger.info('GitPilot is activating...');
 
-    // 初始化平台特定 Provider
+    // Initialize platform-specific providers
     const secretStorage = new VSCodeSecretStorage(context.secrets);
     tokenManager = new TokenManager(secretStorage);
     notifier = new VSCodeNotificationProvider();
 
-    // GitHub Auth Provider 不需要 Token 即可创建
+    // The GitHub Auth Provider can be created without a token
     authProvider = new GitHubAuthProvider(OAUTH_CLIENT_ID);
-    // ⭐ 其他 Provider 等登录后再初始化（避免触发 VS Code 内置 GitHub 登录弹窗）
+    // ⭐ Other providers are initialized after login (to avoid triggering VS Code's built-in GitHub sign-in popup)
     repoProvider = null;
     releaseProvider = null;
     octokit = null;
 
-    // 注册侧边栏
+    // Register the sidebar
     sidebarProvider = new SidebarProvider(context.extensionUri);
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider('gitpilot-main', sidebarProvider),
     );
 
-    // 注册命令
+    // Register commands
     registerCommands(context);
 
-    // 自动恢复登录
+    // Restore the session automatically
     await autoRestoreSession(context);
 
-    // 自动部署触发器
+    // Auto deploy triggers
     initializeAutoDeploy(context);
 
-    logger.info('GitPilot 已激活 ✓');
-    vscode.window.showInformationMessage('🚀 GitPilot 已就绪！点左侧图标开始使用');
+    logger.info('GitPilot activated ✓');
+    vscode.window.showInformationMessage('🚀 GitPilot is ready! Click the icon on the left to start');
   } catch (e: any) {
-    logger.error('激活失败: ' + e.message);
-    vscode.window.showErrorMessage('GitPilot 启动失败: ' + e.message);
+    logger.error('Activation failed: ' + e.message);
+    vscode.window.showErrorMessage('GitPilot failed to start: ' + e.message);
   }
 }
 
 export async function deactivate(): Promise<void> {
   const config = vscode.workspace.getConfiguration('gitpilot');
   if (config.get<boolean>('autoDeploy.onExit') && orchestrator) {
-    try { await orchestrator.deploy(); } catch { /* 非关键 */ }
+    try { await orchestrator.deploy(); } catch { /* non-critical */ }
   }
   if (scheduledTimer) clearInterval(scheduledTimer);
-  logger.info('GitPilot 已停用');
+  logger.info('GitPilot deactivated');
 }
 
-// ---- 命令注册 ----
+// ---- Command registration ----
 function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(vscode.commands.registerCommand('gitpilot.deploy', handleDeploy));
   context.subscriptions.push(vscode.commands.registerCommand('gitpilot.sync', handleSync));
@@ -129,11 +129,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(vscode.commands.registerCommand('gitpilot.configureGitAuthor', configureGitAuthorIdentity));
 }
 
-// ---- 命令处理 ----
-/** 确保已登录，未登录则提示并返回 false */
+// ---- Command handlers ----
+/** Ensure the user is logged in; if not, show a message and return false */
 function ensureLoggedIn(): boolean {
   if (!isLoggedIn || !octokit || !repoProvider) {
-    vscode.window.showWarningMessage('请先登录 GitHub');
+    vscode.window.showWarningMessage('Please sign in to GitHub first');
     return false;
   }
   return true;
@@ -160,7 +160,7 @@ async function ensureGitAuthorIdentity(force = false): Promise<void> {
 async function bindWorkspaceToRepository(repo: Repository, options: { showMessage?: boolean } = {}): Promise<boolean> {
   const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!wsRoot) {
-    vscode.window.showErrorMessage('未打开工作区');
+    vscode.window.showErrorMessage('No workspace is open');
     return false;
   }
 
@@ -172,7 +172,7 @@ async function bindWorkspaceToRepository(repo: Repository, options: { showMessag
   if (!isRepo) {
     await gitProvider.init();
     if (options.showMessage !== false) {
-      vscode.window.showInformationMessage('已初始化本地 Git 仓库');
+      vscode.window.showInformationMessage('Local Git repository initialized');
     }
   }
 
@@ -188,7 +188,7 @@ async function bindWorkspaceToRepository(repo: Repository, options: { showMessag
   await initOrchestrator();
 
   if (options.showMessage !== false) {
-    vscode.window.showInformationMessage(`已关联仓库: ${repo.fullName}`);
+    vscode.window.showInformationMessage(`Linked repository: ${repo.fullName}`);
   }
 
   return true;
@@ -197,7 +197,7 @@ async function bindWorkspaceToRepository(repo: Repository, options: { showMessag
 async function ensureLocalGitRepository(): Promise<boolean> {
   const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!wsRoot) {
-    vscode.window.showErrorMessage('未打开工作区');
+    vscode.window.showErrorMessage('No workspace is open');
     return false;
   }
 
@@ -219,15 +219,15 @@ async function ensureLocalGitRepository(): Promise<boolean> {
   }
 
   const action = await vscode.window.showWarningMessage(
-    '当前文件夹还不是 Git 仓库。请选择一个 GitHub 仓库进行关联，GitPilot 会自动初始化本地 Git。',
+    'This folder is not a Git repository yet. Select a GitHub repository to link, and GitPilot will initialize local Git automatically.',
     { modal: false },
-    '关联已有仓库',
-    '创建仓库并关联',
+    'Link an existing repository',
+    'Create a repository and link it',
   );
 
-  if (action === '关联已有仓库') {
+  if (action === 'Link an existing repository') {
     await vscode.commands.executeCommand('gitpilot.linkRepo');
-  } else if (action === '创建仓库并关联') {
+  } else if (action === 'Create a repository and link it') {
     await vscode.commands.executeCommand('gitpilot.createRepo');
   }
 
@@ -236,10 +236,10 @@ async function ensureLocalGitRepository(): Promise<boolean> {
 
 async function handleDeploy(): Promise<void> {
   try {
-  if (!orchestrator) { vscode.window.showWarningMessage('请先登录 GitHub'); return; }
+  if (!orchestrator) { vscode.window.showWarningMessage('Please sign in to GitHub first'); return; }
   if (!(await ensureLocalGitRepository())) return;
 
-  // ⭐ 部署前检查 origin 远程是否配置
+  // ⭐ Check whether the origin remote is configured before deploying
   if (gitProvider) {
     const remoteUrl = await gitProvider.getRemoteUrl('origin').catch(() => null);
     if (!remoteUrl) {
@@ -248,14 +248,14 @@ async function handleDeploy(): Promise<void> {
         if (!linked) return;
       } else {
       const create = await vscode.window.showWarningMessage(
-        '本地仓库未关联 GitHub 远程仓库。',
+        'The local repository is not linked to a GitHub remote.',
         { modal: false },
-        '关联已有仓库',
-        '创建仓库并关联',
+        'Link an existing repository',
+        'Create a repository and link it',
       );
-      if (create === '关联已有仓库') {
+      if (create === 'Link an existing repository') {
         await vscode.commands.executeCommand('gitpilot.linkRepo');
-      } else if (create === '创建仓库并关联') {
+      } else if (create === 'Create a repository and link it') {
         await vscode.commands.executeCommand('gitpilot.createRepo');
       }
       return;
@@ -263,55 +263,55 @@ async function handleDeploy(): Promise<void> {
     }
   }
 
-  // ⭐ 不提前检查 hasPendingChanges()，让 orchestrator.deploy() 内部处理：
-  //   - 无变更 + 无未推送 → 返回 no-changes
-  //   - 无变更 + 有未推送 → 直接 git push（v1.2.9）
-  //   - 有变更 → 完整部署流程
+  // ⭐ Do not pre-check hasPendingChanges(); let orchestrator.deploy() handle everything internally:
+  //   - no changes + nothing unpushed → returns no-changes
+  //   - no changes + unpushed commits → pushes directly (v1.2.9)
+  //   - changes → full deploy flow
 
   await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: 'GitPilot 部署中...', cancellable: true },
+    { location: vscode.ProgressLocation.Notification, title: 'GitPilot deploying...', cancellable: true },
     async (progress, token) => {
       const result = await orchestrator!.deploy();
       if (!token.isCancellationRequested) await showDeployResult(result);
     },
   );
-  } catch (e: any) { vscode.window.showErrorMessage(`部署异常: ${e.message}`); logger.error('Deploy error: ' + e.message); }
+  } catch (e: any) { vscode.window.showErrorMessage(`Deploy error: ${e.message}`); logger.error('Deploy error: ' + e.message); }
 }
 
 async function handleSync(): Promise<void> {
   try {
-  if (!orchestrator) { vscode.window.showWarningMessage('请先登录 GitHub'); return; }
+  if (!orchestrator) { vscode.window.showWarningMessage('Please sign in to GitHub first'); return; }
   if (!(await ensureLocalGitRepository())) return;
   await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: 'GitPilot 同步中...' },
+    { location: vscode.ProgressLocation.Notification, title: 'GitPilot syncing...' },
     async () => { const r = await orchestrator!.sync(); await showDeployResult(r); },
   );
-  } catch (e: any) { vscode.window.showErrorMessage(`同步异常: ${e.message}`); }
+  } catch (e: any) { vscode.window.showErrorMessage(`Sync error: ${e.message}`); }
 }
 
 async function handleLogin(): Promise<void> {
   try {
-    // ⭐ 如果 OAuth 未配置，直接走 PAT Token 登录（最可靠的方式）
+    // ⭐ If OAuth is not configured, go straight to PAT token login (the most reliable option)
     if (!isOAuthConfigured()) {
       await loginWithPAT();
       return;
     }
 
-    // OAuth 已配置 → 提供两种登录方式选择
+    // OAuth configured → offer both login methods
     const method = await vscode.window.showQuickPick(
       [
         {
-          label: '🔐 浏览器 OAuth 登录',
-          description: '✨ 推荐',
-          detail: '自动打开浏览器完成 GitHub 授权，安全便捷',
+          label: '🔐 Browser OAuth login',
+          description: '✨ Recommended',
+          detail: 'Opens the browser to complete GitHub authorization — safe and easy',
         },
         {
           label: '🔑 Personal Access Token',
-          description: '手动输入',
-          detail: '使用 GitHub Personal Access Token 登录（需要 repo + workflow 权限）',
+          description: 'Enter manually',
+          detail: 'Sign in with a GitHub Personal Access Token (requires repo + workflow scopes)',
         },
       ],
-      { placeHolder: '选择 GitHub 登录方式', title: 'GitPilot · 登录 GitHub' },
+      { placeHolder: 'Choose a GitHub sign-in method', title: 'GitPilot · Sign in to GitHub' },
     );
 
     if (!method) return;
@@ -322,24 +322,24 @@ async function handleLogin(): Promise<void> {
       await loginWithBrowserOAuth();
     }
   } catch (e: any) {
-    vscode.window.showErrorMessage(`登录失败: ${e.message}`);
+    vscode.window.showErrorMessage(`Login failed: ${e.message}`);
     logger.error('Login error: ' + e.message + '\n' + e.stack);
   }
 }
 
-// ---- PAT 登录（保留原有流程） ----
+// ---- PAT login (original flow) ----
 async function loginWithPAT(): Promise<void> {
   const token = await vscode.window.showInputBox({
-    prompt: '输入 GitHub Personal Access Token\n（需要 repo + workflow 权限）\n创建: https://github.com/settings/tokens',
+    prompt: 'Enter your GitHub Personal Access Token\n(requires repo + workflow scopes)\nCreate one at: https://github.com/settings/tokens',
     password: true,
     placeHolder: 'ghp_xxxxxxxxxxxx',
     ignoreFocusOut: true,
   });
-  if (!token) { vscode.window.showWarningMessage('已取消登录'); return; }
+  if (!token) { vscode.window.showWarningMessage('Login cancelled'); return; }
 
-  vscode.window.showInformationMessage('正在验证 Token...');
+  vscode.window.showInformationMessage('Validating token...');
   const isValid = await authProvider.validateToken(token);
-  if (!isValid) { vscode.window.showErrorMessage('Token 无效，请检查权限是否包含 repo 和 workflow'); return; }
+  if (!isValid) { vscode.window.showErrorMessage('Invalid token. Please check that it has the repo and workflow scopes.'); return; }
 
   const user = await authProvider.getUserInfo(token);
   await tokenManager.save(user.login, token, 'github');
@@ -347,46 +347,46 @@ async function loginWithPAT(): Promise<void> {
   await completeLogin(token, user);
 }
 
-// ---- 浏览器 OAuth 登录（新流程） ----
+// ---- Browser OAuth login (new flow) ----
 async function loginWithBrowserOAuth(): Promise<void> {
-  // ⭐ 二次防护：OAuth 未配置时直接拦截，防止打开无效的授权页面
+  // ⭐ Second guard: block early when OAuth is not configured, to avoid opening an invalid authorization page
   if (!isOAuthConfigured()) {
     const usePat = await vscode.window.showWarningMessage(
-      '浏览器 OAuth 登录尚未配置（需要注册 GitHub OAuth App）。\n建议使用 Personal Access Token 登录。',
+      'Browser OAuth login is not configured yet (a GitHub OAuth App must be registered).\nPlease use a Personal Access Token instead.',
       { modal: true },
-      '使用 PAT Token 登录',
+      'Sign in with PAT Token',
     );
-    if (usePat === '使用 PAT Token 登录') {
+    if (usePat === 'Sign in with PAT Token') {
       await loginWithPAT();
     }
     return;
   }
 
-  // 1. 弹出浏览器选择面板
+  // 1. Show the browser picker panel
   const browser = await promptBrowserSelection();
-  if (browser === undefined) return; // 用户取消选择
+  if (browser === undefined) return; // user cancelled the selection
 
-  // 2. 构建 OAuth 授权 URL
+  // 2. Build the OAuth authorization URL
   const authUrl = authProvider.getAuthorizationUrl();
 
-  // 3. 执行浏览器 OAuth 流程
-  const browserName = browser ? browser.name : '系统默认浏览器';
-  vscode.window.showInformationMessage(`正在用 ${browserName} 打开 GitHub 授权页面...`);
+  // 3. Run the browser OAuth flow
+  const browserName = browser ? browser.name : 'System default browser';
+  vscode.window.showInformationMessage(`Opening the GitHub authorization page with ${browserName}...`);
 
   const code = await performBrowserOAuth(authUrl, browser);
 
-  // 4. 用授权码换取 Token
-  vscode.window.showInformationMessage('正在获取访问令牌...');
+  // 4. Exchange the authorization code for a token
+  vscode.window.showInformationMessage('Fetching access token...');
   const authToken = await authProvider.exchangeCodeForToken(code);
 
-  // 5. 验证并获取用户信息
+  // 5. Validate and get user info
   const user = await authProvider.getUserInfo(authToken.accessToken);
   await tokenManager.save(user.login, authToken.accessToken, 'github');
 
   await completeLogin(authToken.accessToken, user);
 }
 
-// ---- 登录完成后的统一处理 ----
+// ---- Shared post-login handling ----
 async function completeLogin(token: string, user: UserInfo): Promise<void> {
   octokit = new Octokit({ auth: token });
   repoProvider = new GitHubRepositoryProvider(octokit);
@@ -396,13 +396,13 @@ async function completeLogin(token: string, user: UserInfo): Promise<void> {
 
   await initOrchestrator();
   vscode.commands.executeCommand('setContext', 'gitpilot:loggedIn', true);
-  vscode.window.showInformationMessage(`✅ 已登录: ${user.login}`);
+  vscode.window.showInformationMessage(`✅ Signed in: ${user.login}`);
   sidebarProvider.setLoggedIn(user.login, user.avatarUrl ?? undefined);
 }
 
 async function handleLogout(): Promise<void> {
-  const confirm = await vscode.window.showWarningMessage('确定登出？', { modal: true }, '登出');
-  if (confirm !== '登出') return;
+  const confirm = await vscode.window.showWarningMessage('Sign out?', { modal: true }, 'Sign out');
+  if (confirm !== 'Sign out') return;
   await tokenManager.clearAll();
   orchestrator = null;
   octokit = null;
@@ -411,16 +411,16 @@ async function handleLogout(): Promise<void> {
   selectedRepo = null;
   isLoggedIn = false;
   vscode.commands.executeCommand('setContext', 'gitpilot:loggedIn', false);
-  vscode.window.showInformationMessage('已登出');
+  vscode.window.showInformationMessage('Signed out');
   sidebarProvider.setLoggedOut();
 }
 
 async function handleSwitchAccount(): Promise<void> {
   if (!ensureLoggedIn()) return;
   const accounts = await tokenManager.getAccounts();
-  if (accounts.length === 0) { vscode.window.showInformationMessage('无已保存账号'); return; }
+  if (accounts.length === 0) { vscode.window.showInformationMessage('No saved accounts'); return; }
   const items = accounts.map((a) => ({ label: a.login, description: `${a.platform} · ${new Date(a.lastUsedAt).toLocaleDateString()}` }));
-  const picked = await vscode.window.showQuickPick(items, { placeHolder: '选择账号' });
+  const picked = await vscode.window.showQuickPick(items, { placeHolder: 'Choose an account' });
   if (!picked) return;
   await tokenManager.switchTo(picked.label);
   const token = await tokenManager.get(picked.label);
@@ -438,23 +438,23 @@ async function handleSwitchAccount(): Promise<void> {
     }
     await initOrchestrator();
   }
-  vscode.window.showInformationMessage(`已切换: ${picked.label}`);
+  vscode.window.showInformationMessage(`Switched to: ${picked.label}`);
 }
 
 async function handleCreateRepo(): Promise<void> {
   if (!ensureLoggedIn()) return;
   const provider = repoProvider;
   if (!provider) return;
-  const name = await vscode.window.showInputBox({ prompt: '仓库名称', placeHolder: 'my-project' });
+  const name = await vscode.window.showInputBox({ prompt: 'Repository name', placeHolder: 'my-project' });
   if (!name) return;
-  const priv = await vscode.window.showQuickPick(['公开', '私有'], { placeHolder: '可见性' });
+  const priv = await vscode.window.showQuickPick(['Public', 'Private'], { placeHolder: 'Visibility' });
   if (!priv) return;
   try {
-    const repo = await provider.createRepo({ name, private: priv === '私有', autoInit: true });
-    vscode.window.showInformationMessage(`✅ 已创建: ${repo.fullName}`);
+    const repo = await provider.createRepo({ name, private: priv === 'Private', autoInit: true });
+    vscode.window.showInformationMessage(`✅ Created: ${repo.fullName}`);
 
     await bindWorkspaceToRepository(repo, { showMessage: true });
-  } catch (e: any) { vscode.window.showErrorMessage(`创建失败: ${e.message}`); }
+  } catch (e: any) { vscode.window.showErrorMessage(`Create failed: ${e.message}`); }
 }
 
 async function handleSwitchRepo(): Promise<void> {
@@ -467,37 +467,37 @@ async function handleSwitchRepo(): Promise<void> {
       detail: r.cloneUrl,
       repo: r,
     }));
-    const picked = await vscode.window.showQuickPick(items, { placeHolder: '选择仓库', matchOnDescription: true });
+    const picked = await vscode.window.showQuickPick(items, { placeHolder: 'Choose a repository', matchOnDescription: true });
     if (!picked) return;
 
     const linked = await bindWorkspaceToRepository(picked.repo, { showMessage: false });
     if (!linked) return;
 
-    vscode.window.showInformationMessage(`✅ 已切换并关联至: ${picked.repo.fullName}`);
-    // ⭐ 自动刷新状态
+    vscode.window.showInformationMessage(`✅ Switched and linked to: ${picked.repo.fullName}`);
+    // ⭐ Refresh the status automatically
     vscode.commands.executeCommand('gitpilot.refreshStatus');
-  } catch (e: any) { vscode.window.showErrorMessage(`切换失败: ${e.message}`); }
+  } catch (e: any) { vscode.window.showErrorMessage(`Switch failed: ${e.message}`); }
 }
 
 async function handleRefreshRepos(): Promise<void> {
   if (!ensureLoggedIn()) return;
   try {
     const repos = await repoProvider!.listRepos();
-    vscode.window.showInformationMessage(`找到 ${repos.length} 个仓库`);
-  } catch (e: any) { vscode.window.showErrorMessage(`刷新失败: ${e.message}`); }
+    vscode.window.showInformationMessage(`Found ${repos.length} repository(ies)`);
+  } catch (e: any) { vscode.window.showErrorMessage(`Refresh failed: ${e.message}`); }
 }
 
-// ⭐ 一键关联 GitHub 仓库
+// ⭐ One-click GitHub repository linking
 async function handleLinkRepo(): Promise<void> {
   if (!ensureLoggedIn()) return;
   try {
     const repos = await repoProvider!.listRepos();
     if (repos.length === 0) {
       const create = await vscode.window.showInformationMessage(
-        '你还没有 GitHub 仓库，是否创建一个？',
-        '创建仓库',
+        "You don't have any GitHub repository yet. Create one?",
+        'Create repository',
       );
-      if (create === '创建仓库') {
+      if (create === 'Create repository') {
         vscode.commands.executeCommand('gitpilot.createRepo');
       }
       return;
@@ -511,41 +511,41 @@ async function handleLinkRepo(): Promise<void> {
     }));
 
     const picked = await vscode.window.showQuickPick(items, {
-      placeHolder: '选择要关联的 GitHub 仓库',
-      title: 'GitPilot · 关联远程仓库',
+      placeHolder: 'Choose a GitHub repository to link',
+      title: 'GitPilot · Link remote repository',
       matchOnDescription: true,
     });
     if (!picked) return;
 
     await bindWorkspaceToRepository(picked.repo, { showMessage: true });
   } catch (e: any) {
-    vscode.window.showErrorMessage(`关联失败: ${e.message}`);
+    vscode.window.showErrorMessage(`Link failed: ${e.message}`);
   }
 }
 
-// ⭐ 真实刷新状态（从 GitHub API 拉取仓库列表 + Git 本地状态）
+// ⭐ Real status refresh (fetch the repository list from the GitHub API + local Git status)
 async function handleRefreshStatus(): Promise<void> {
   if (!ensureLoggedIn()) {
-    sidebarProvider.postMessage({ refreshState: 'error', statusText: '请先登录', status: '❌ 未登录' });
+    sidebarProvider.postMessage({ refreshState: 'error', statusText: 'Please sign in first', status: '❌ Not signed in' });
     return;
   }
-  // 通知侧边栏开始加载动画
+  // Tell the sidebar to start the loading animation
   sidebarProvider.postMessage({ refreshState: 'start' });
 
-  const timeoutMs = 10000; // 10 秒超时
+  const timeoutMs = 10000; // 10 second timeout
 
   try {
     const result = await Promise.race([
       (async () => {
-        // 实际刷新操作：获取仓库列表 + Git 状态
+        // Actual refresh work: fetch the repository list + Git status
         const repos = await repoProvider!.listRepos();
         let gitStatusInfo = '';
         try {
           if (orchestrator) {
             const hasChanges = await orchestrator.hasPendingChanges();
-            gitStatusInfo = hasChanges ? ' · 有未部署变更' : ' · 已是最新';
+            gitStatusInfo = hasChanges ? ' · undeployed changes' : ' · up to date';
           }
-        } catch { /* git status 非关键 */ }
+        } catch { /* git status is non-critical */ }
 
         return { repos, gitStatusInfo };
       })(),
@@ -554,20 +554,20 @@ async function handleRefreshStatus(): Promise<void> {
       ),
     ]);
 
-    // 刷新成功
-    const statusMsg = `已同步 ${result.repos.length} 个仓库${result.gitStatusInfo}`;
+    // Refresh succeeded
+    const statusMsg = `Synced ${result.repos.length} repository(ies)${result.gitStatusInfo}`;
     sidebarProvider.postMessage({
       refreshState: 'done',
       statusText: statusMsg,
-      status: '✅ 就绪',
+      status: '✅ Ready',
     });
   } catch (e: any) {
-    // 超时或错误
+    // Timeout or error
     logger.error('Refresh error: ' + (e.message ?? String(e)));
     sidebarProvider.postMessage({
       refreshState: 'error',
-      statusText: '报错！请检查网络是否正常',
-      status: '❌ 刷新失败',
+      statusText: 'Error! Please check your network connection',
+      status: '❌ Refresh failed',
     });
   }
 }
@@ -575,23 +575,23 @@ async function handleRefreshStatus(): Promise<void> {
 async function handleConfigureBuild(): Promise<void> {
   const config = vscode.workspace.getConfiguration('gitpilot');
   const cmd = await vscode.window.showInputBox({
-    prompt: '输入构建命令（不猜测语言，你自己写）',
+    prompt: 'Enter the build command (no language guessing — you write it)',
     placeHolder: 'npm run build / cargo build --release / ...',
     value: config.get<string>('build.command') ?? '',
   });
   if (cmd === undefined) return;
-  const beforeDeploy = await vscode.window.showQuickPick(['是', '否'], { placeHolder: '部署前执行 Build？' });
-  const blockOnFail = await vscode.window.showQuickPick(['是', '否'], { placeHolder: 'Build 失败时阻止部署？' });
+  const beforeDeploy = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Run Build before deploy?' });
+  const blockOnFail = await vscode.window.showQuickPick(['Yes', 'No'], { placeHolder: 'Block the deploy when Build fails?' });
   await config.update('build.command', cmd, vscode.ConfigurationTarget.Workspace);
-  await config.update('build.beforeDeploy', beforeDeploy === '是', vscode.ConfigurationTarget.Workspace);
-  await config.update('build.blockOnFailure', blockOnFail === '是', vscode.ConfigurationTarget.Workspace);
-  vscode.window.showInformationMessage('✅ 构建配置已更新');
+  await config.update('build.beforeDeploy', beforeDeploy === 'Yes', vscode.ConfigurationTarget.Workspace);
+  await config.update('build.blockOnFailure', blockOnFail === 'Yes', vscode.ConfigurationTarget.Workspace);
+  vscode.window.showInformationMessage('✅ Build configuration updated');
 }
 
 async function configureGitAuthorIdentity(): Promise<void> {
   const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   if (!wsRoot) {
-    vscode.window.showErrorMessage('未打开工作区');
+    vscode.window.showErrorMessage('No workspace is open');
     return;
   }
 
@@ -605,14 +605,14 @@ async function configureGitAuthorIdentity(): Promise<void> {
 
   const current = getActiveGitAuthor();
   const name = await vscode.window.showInputBox({
-    prompt: '输入 Git 提交用户名',
+    prompt: 'Enter the Git commit user name',
     value: current.name,
     ignoreFocusOut: true,
   });
   if (!name) return;
 
   const email = await vscode.window.showInputBox({
-    prompt: '输入 Git 提交邮箱',
+    prompt: 'Enter the Git commit email',
     value: current.email,
     ignoreFocusOut: true,
   });
@@ -621,7 +621,7 @@ async function configureGitAuthorIdentity(): Promise<void> {
   activeGitAuthorName = name;
   activeGitAuthorEmail = email;
   await gitProvider.ensureAuthorIdentity(name, email, true);
-  vscode.window.showInformationMessage('Git 作者身份已配置');
+  vscode.window.showInformationMessage('Git author identity configured');
 }
 
 function stripErrorPrefix(error: string, prefix: string): string {
@@ -629,20 +629,20 @@ function stripErrorPrefix(error: string, prefix: string): string {
   return index >= 0 ? error.slice(index + prefix.length) : error;
 }
 
-// ---- 部署结果展示 ----
+// ---- Deploy result presentation ----
 async function showDeployResult(result: DeployResult): Promise<void> {
   if (result.success && result.status === 'no-changes') return;
   if (result.success) {
-    // ⭐ 从步骤中提取暂存文件数
-    const stageStep = result.steps?.find((s: any) => s.name === '暂存文件');
+    // ⭐ Extract the staged file count from the steps
+    const stageStep = result.steps?.find((s: any) => s.name === 'Staging files');
     const fileInfo = stageStep?.details ? ` · ${stageStep.details}` : '';
 
     const actionId = await notifier.show({
-      type: 'success', title: '🚀 部署成功！',
-      message: `提交: ${result.commitHash?.substring(0, 7) ?? '--'}${fileInfo} · 耗时 ${(result.totalDurationMs / 1000).toFixed(1)}s`,
+      type: 'success', title: '🚀 Deployed!',
+      message: `Commit: ${result.commitHash?.substring(0, 7) ?? '--'}${fileInfo} · took ${(result.totalDurationMs / 1000).toFixed(1)}s`,
       actions: [
-        { label: '在 GitHub 上查看', id: 'open-repo' },
-        ...(result.releaseUrl ? [{ label: '查看 Release', id: 'open-release' }] : []),
+        { label: 'View on GitHub', id: 'open-repo' },
+        ...(result.releaseUrl ? [{ label: 'View Release', id: 'open-release' }] : []),
       ],
     });
 
@@ -661,7 +661,7 @@ async function showDeployResult(result: DeployResult): Promise<void> {
 
     let displayMsg: string;
     if (isOriginMissing) {
-      displayMsg = '本地仓库未关联 GitHub 远程地址';
+      displayMsg = 'The local repository is not linked to a GitHub remote';
     } else if (isGitNotFound) {
       displayMsg = stripErrorPrefix(errorText, GIT_NOT_FOUND_PREFIX);
     } else if (isNotGitRepo) {
@@ -669,23 +669,23 @@ async function showDeployResult(result: DeployResult): Promise<void> {
     } else if (isAuthorMissing) {
       displayMsg = stripErrorPrefix(errorText, GIT_AUTHOR_MISSING_PREFIX);
     } else if (isNetworkError) {
-      // ⭐ 网络错误 → 提取友好消息（去掉前缀）
+      // ⭐ Network error → extract the friendly message (strip the prefix)
       displayMsg = errorText.replace(/^.*?(NETWORK_\w+:)/, '').replace(/^NETWORK_\w+:/, '');
     } else {
-      displayMsg = errorText || '未知错误';
+      displayMsg = errorText || 'Unknown error';
     }
 
     const actions: { label: string; id: string }[] = [];
     if (isOriginMissing || isNotGitRepo) {
-      actions.push({ label: '创建仓库并关联', id: 'create-repo' });
-      actions.push({ label: '🔗 关联仓库', id: 'link-repo' });
+      actions.push({ label: 'Create repository and link', id: 'create-repo' });
+      actions.push({ label: '🔗 Link repository', id: 'link-repo' });
     }
-    if (isAuthorMissing) actions.push({ label: '配置 Git 作者', id: 'configure-author' });
-    if (isNetworkError) actions.push({ label: '⏳ 3秒后重试', id: 'retry-delayed' });
-    actions.push({ label: '重试', id: 'retry' });
+    if (isAuthorMissing) actions.push({ label: 'Configure Git author', id: 'configure-author' });
+    if (isNetworkError) actions.push({ label: '⏳ Retry in 3s', id: 'retry-delayed' });
+    actions.push({ label: 'Retry', id: 'retry' });
 
     const actionId = await notifier.show({
-      type: 'error', title: '❌ 部署失败',
+      type: 'error', title: '❌ Deploy failed',
       message: displayMsg,
       actions,
     });
@@ -697,8 +697,8 @@ async function showDeployResult(result: DeployResult): Promise<void> {
     } else if (actionId === 'configure-author') {
       await configureGitAuthorIdentity();
     } else if (actionId === 'retry-delayed') {
-      // ⭐ 网络错误：等 3 秒再重试
-      vscode.window.showInformationMessage('⏳ 3 秒后自动重试...');
+      // ⭐ Network error: wait 3 seconds before retrying
+      vscode.window.showInformationMessage('⏳ Retrying automatically in 3 seconds...');
       await new Promise(r => setTimeout(r, 3000));
       vscode.commands.executeCommand('gitpilot.deploy');
     } else if (actionId === 'retry') {
@@ -707,19 +707,19 @@ async function showDeployResult(result: DeployResult): Promise<void> {
   }
 }
 
-// ⭐ 用浏览器打开指定 URL（优先 Edge → Chrome → 报错）
+// ⭐ Open the given URL in a browser (Edge first → Chrome → error)
 async function openUrlInBrowser(url: string): Promise<void> {
   const { exec } = require('child_process');
   const fs = require('fs');
   const path = require('path');
   const os = require('os');
 
-  // 检测 Edge 路径
+  // Detect Edge paths
   const edgePaths = [
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
     'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
   ];
-  // 检测 Chrome 路径
+  // Detect Chrome paths
   const localAppData = process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local');
   const chromePaths = [
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -730,11 +730,11 @@ async function openUrlInBrowser(url: string): Promise<void> {
   let browserPath: string | null = null;
   let browserName = '';
 
-  // 优先 Edge
+  // Edge first
   for (const p of edgePaths) {
     if (fs.existsSync(p)) { browserPath = p; browserName = 'Edge'; break; }
   }
-  // 其次 Chrome
+  // Then Chrome
   if (!browserPath) {
     for (const p of chromePaths) {
       if (fs.existsSync(p)) { browserPath = p; browserName = 'Chrome'; break; }
@@ -743,7 +743,7 @@ async function openUrlInBrowser(url: string): Promise<void> {
 
   if (!browserPath) {
     vscode.window.showErrorMessage(
-      '您的浏览器似乎不在我们的许可中，请更换至对应浏览器（参考 Edge 浏览器和 Google 浏览器）',
+      'Your browser does not appear to be supported. Please use a supported browser (e.g. Edge or Google Chrome).',
     );
     return;
   }
@@ -751,7 +751,7 @@ async function openUrlInBrowser(url: string): Promise<void> {
   return new Promise((resolve) => {
     exec(`start "" "${browserPath}" "${url}"`, { timeout: 5000 }, (err: any) => {
       if (err) {
-        // 回退到 VS Code 内置打开方式
+        // Fall back to VS Code's built-in open method
         vscode.env.openExternal(vscode.Uri.parse(url));
       }
       resolve();
@@ -759,9 +759,9 @@ async function openUrlInBrowser(url: string): Promise<void> {
   });
 }
 
-// ⭐ 打开当前仓库的 GitHub 页面
+// ⭐ Open the GitHub page of the current repository
 async function openRepoInBrowser(): Promise<void> {
-  // 尝试从 git remote 获取 URL
+  // Try to get the URL from the git remote
   let repoUrl: string | null = null;
   try {
     if (gitProvider) {
@@ -775,21 +775,21 @@ async function openRepoInBrowser(): Promise<void> {
   } catch { /* ignore */ }
 
   if (!repoUrl) {
-    vscode.window.showErrorMessage('无法获取仓库地址，请手动打开 GitHub。');
+    vscode.window.showErrorMessage('Unable to get the repository URL. Please open GitHub manually.');
     return;
   }
 
   await openUrlInBrowser(repoUrl);
 }
 
-// ---- 初始化 Orchestrator ----
+// ---- Initialize the Orchestrator ----
 async function initOrchestrator(): Promise<void> {
   if (!repoProvider || !releaseProvider) {
-    logger.warn('GitHub Provider 未初始化，请先登录');
+    logger.warn('GitHub Provider is not initialized; please sign in first');
     return;
   }
   const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-  if (!wsRoot) { logger.warn('未打开工作区'); return; }
+  if (!wsRoot) { logger.warn('No workspace is open'); return; }
 
   const config = vscode.workspace.getConfiguration('gitpilot');
   gitProvider = new VSCodeGitProvider(wsRoot);
@@ -803,19 +803,19 @@ async function initOrchestrator(): Promise<void> {
     }
   } catch { /* keep deploy setup non-blocking */ }
 
-  // ⭐ 智能检测当前分支：先查当前分支，失败则列本地分支取第一个
+  // ⭐ Smart branch detection: check the current branch first; on failure fall back to the first local branch
   let branch = 'main';
   try {
     const b = await gitProvider.getCurrentBranch();
     if (b && b !== 'HEAD') branch = b;
   } catch {
-    // getCurrentBranch 失败，尝试回退
+    // getCurrentBranch failed, try the fallback
     try {
       const status = await gitProvider.getStatus();
       if (status.currentBranch && status.currentBranch !== 'HEAD' && status.currentBranch !== 'unknown') {
         branch = status.currentBranch;
       }
-    } catch { /* 保持 main 作为默认值 */ }
+    } catch { /* keep main as the default */ }
   }
 
   const remoteUrl = await gitProvider.getRemoteUrl().catch(() => null);
@@ -836,7 +836,7 @@ async function initOrchestrator(): Promise<void> {
       }
       : null;
 
-  // ⭐ 更新侧边栏仓库信息
+  // ⭐ Update the sidebar repository info
   if (effectiveRepo) {
     sidebarProvider.setRepoName(effectiveRepo.fullName);
   }
@@ -864,7 +864,7 @@ async function initOrchestrator(): Promise<void> {
   );
 }
 
-// ---- 自动登录恢复 ----
+// ---- Automatic session restore ----
 async function autoRestoreSession(context: vscode.ExtensionContext): Promise<void> {
   const token = await tokenManager.getActive();
   if (!token) { vscode.commands.executeCommand('setContext', 'gitpilot:loggedIn', false); return; }
@@ -882,8 +882,8 @@ async function autoRestoreSession(context: vscode.ExtensionContext): Promise<voi
   isLoggedIn = true;
   await initOrchestrator();
   vscode.commands.executeCommand('setContext', 'gitpilot:loggedIn', true);
-  logger.info('Session 已恢复');
-  // 获取用户名用于侧边栏显示
+  logger.info('Session restored');
+  // Fetch the user name for the sidebar display
   try {
     const user = await authProvider.getUserInfo(token);
     setActiveGitAuthor(user);
@@ -893,7 +893,7 @@ async function autoRestoreSession(context: vscode.ExtensionContext): Promise<voi
   }
 }
 
-// ---- 自动部署触发器 ----
+// ---- Auto deploy triggers ----
 function initializeAutoDeploy(context: vscode.ExtensionContext): void {
   const config = vscode.workspace.getConfiguration('gitpilot');
 
@@ -909,13 +909,13 @@ function initializeAutoDeploy(context: vscode.ExtensionContext): void {
   if (config.get<boolean>('autoDeploy.scheduled')) {
     const interval = parseInterval(config.get<string>('autoDeploy.scheduledInterval') ?? '30min');
     scheduledTimer = setInterval(async () => {
-      // ⭐ 不预检查，让 orchestrator 内部处理所有情况（含未推送提交检测）
+      // ⭐ No pre-checks; let the orchestrator handle every situation internally (including unpushed-commit detection)
       if (orchestrator) await orchestrator.deploy();
     }, interval);
   }
 }
 
-// ---- 辅助函数 ----
+// ---- Helper functions ----
 function parseRepoFromUrl(url: string | null): { owner: string; name: string } | null {
   if (!url) return null;
   const m = url.match(/github\.com[:/]([^/]+)\/([^/.]+)/);

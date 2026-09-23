@@ -1,6 +1,6 @@
 // ============================================================
-// ISecretStorage — 安全存储抽象
-// VS Code → SecretStorage，JetBrains → PasswordSafe
+// ISecretStorage — secure storage abstraction
+// VS Code → SecretStorage, JetBrains → PasswordSafe
 // ============================================================
 
 export interface ISecretStorage {

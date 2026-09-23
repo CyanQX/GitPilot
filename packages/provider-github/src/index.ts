@@ -1,5 +1,5 @@
 // ============================================================
-// @gitpilot/provider-github — 统一导出
+// @gitpilot/provider-github — unified exports
 // ============================================================
 
 export { GitHubRepositoryProvider } from './GitHubRepositoryProvider';

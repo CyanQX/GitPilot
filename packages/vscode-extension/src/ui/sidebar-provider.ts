@@ -8,8 +8,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private _loginName = 'CyanQX';
   private _repoName = 'CyanQX/GitPilot_main';
   private _buildCmd = '';
-  private _status = '就绪';
-  private _statusText = '已同步 5 个仓库';
+  private _status = 'Ready';
+  private _statusText = 'Synced 5 repositories';
   private _avatarUrl = 'https://github.com/CyanQX.png?size=96';
 
   constructor(private readonly _extensionUri: vscode.Uri) {}
@@ -64,15 +64,15 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     this._isLoggedIn = true;
     this._loginName = login || 'CyanQX';
     this._avatarUrl = avatarUrl || 'https://github.com/CyanQX.png?size=96';
-    this._status = '就绪';
-    this._statusText = this._statusText || '已同步 5 个仓库';
+    this._status = 'Ready';
+    this._statusText = this._statusText || 'Synced 5 repositories';
     this._pushState();
   }
 
   setLoggedOut(): void {
     this._isLoggedIn = false;
-    this._status = '未登录';
-    this._statusText = '请先绑定 GitHub 账号';
+    this._status = 'Not signed in';
+    this._statusText = 'Please link your GitHub account first';
     this._pushState();
   }
 
@@ -98,8 +98,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (msg.avatarUrl !== undefined) this._avatarUrl = msg.avatarUrl || 'https://github.com/CyanQX.png?size=96';
     if (msg.repoName !== undefined) this._repoName = msg.repoName || 'CyanQX/GitPilot_main';
     if (msg.buildCmd !== undefined) this._buildCmd = msg.buildCmd || '';
-    if (msg.status !== undefined) this._status = msg.status || '就绪';
-    if (msg.statusText !== undefined) this._statusText = msg.statusText || '已同步 5 个仓库';
+    if (msg.status !== undefined) this._status = msg.status || 'Ready';
+    if (msg.statusText !== undefined) this._statusText = msg.statusText || 'Synced 5 repositories';
 
     this._view?.webview.postMessage(msg);
   }
@@ -108,7 +108,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const nonce = this.getNonce();
 
     return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -968,9 +968,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       <div class="icon-bubble">
         ${this.icon('github', 'icon-xl')}
       </div>
-      <p class="eyebrow">GitPilot 控制台</p>
-      <h1 class="title-lg">连接 GitHub 开始部署</h1>
-      <p class="description">绑定账号后即可管理仓库、同步代码并一键部署。</p>
+      <p class="eyebrow">GitPilot Console</p>
+      <h1 class="title-lg">Connect GitHub to start deploying</h1>
+      <p class="description">Link your account to manage repositories, sync code, and deploy in one click.</p>
       <button class="btn btn-purple" id="btn-login">${this.icon('github')} Login with GitHub</button>
     </section>
   </div>
@@ -988,29 +988,29 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             <h1 class="title-lg" id="account-name">CyanQX</h1>
             <div class="status-line">
               <span class="check-ring">${this.icon('check-circle')}</span>
-              <span id="account-desc">GitHub 账号已绑定</span>
+              <span id="account-desc">GitHub account linked</span>
             </div>
           </div>
         </div>
-        <button class="btn btn-danger" id="btn-logout">${this.icon('logout')} 退出登录</button>
+        <button class="btn btn-danger" id="btn-logout">${this.icon('logout')} Sign out</button>
       </section>
 
       <section class="card repo-card">
         <div class="icon-bubble">${this.icon('folder', 'icon-xl')}</div>
         <div>
-          <p class="eyebrow">当前仓库</p>
+          <p class="eyebrow">Current repository</p>
           <h2 class="title-lg" id="repo-name">CyanQX/GitPilot_main</h2>
-          <div class="badge">${this.icon('github')} GitHub 仓库</div>
+          <div class="badge">${this.icon('github')} GitHub repository</div>
         </div>
         <div class="repo-actions">
-          <button class="repo-action" id="btn-openGitHub" title="在 GitHub 打开">
+          <button class="repo-action" id="btn-openGitHub" title="Open on GitHub">
             <span class="repo-action-icon">${this.icon('external')}</span>
-            <span>在 GitHub 打开</span>
+            <span>Open on GitHub</span>
           </button>
           <div class="repo-divider"></div>
-          <button class="repo-action" id="btn-switchRepo" title="切换仓库">
+          <button class="repo-action" id="btn-switchRepo" title="Switch repository">
             <span class="repo-action-icon">${this.icon('switch')}</span>
-            <span>切换仓库</span>
+            <span>Switch repository</span>
           </button>
         </div>
       </section>
@@ -1019,17 +1019,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         <div class="deploy-card">
           <div class="deploy-icon">${this.icon('rocket', 'icon-xl')}</div>
           <div class="deploy-copy">
-            <h2 class="deploy-title">部署到服务器</h2>
-            <p class="deploy-desc">构建并部署当前仓库的最新代码</p>
+            <h2 class="deploy-title">Deploy to server</h2>
+            <p class="deploy-desc">Build and deploy the latest code of the current repository</p>
           </div>
-          <button class="btn btn-deploy" id="btn-deploy">${this.icon('rocket')} 立即部署 ${this.icon('chevron')}</button>
+          <button class="btn btn-deploy" id="btn-deploy">${this.icon('rocket')} Deploy now ${this.icon('chevron')}</button>
         </div>
 
         <button class="card sync-card" id="btn-sync">
           <span class="sync-icon">${this.icon('sync', 'icon-lg')}</span>
           <span>
-            <span class="title-md">同步仓库</span>
-            <span class="description">拉取最新代码与仓库信息</span>
+            <span class="title-md">Sync repository</span>
+            <span class="description">Pull the latest code and repository info</span>
           </span>
           <span class="chevron">${this.icon('chevron')}</span>
         </button>
@@ -1038,36 +1038,36 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       <section class="card settings-card">
         <div class="icon-bubble settings-icon">${this.icon('terminal', 'icon-lg')}</div>
         <div>
-          <h2 class="title-md">构建命令</h2>
-          <div class="build-state" id="build-cmd">未配置</div>
-          <p class="description">配置构建命令以在部署时执行自定义构建流程</p>
+          <h2 class="title-md">Build command</h2>
+          <div class="build-state" id="build-cmd">Not configured</div>
+          <p class="description">Configure a build command to run a custom build before deploying</p>
         </div>
-        <button class="btn btn-secondary" id="btn-configureBuild">${this.icon('settings')} 配置构建命令 ${this.icon('chevron')}</button>
+        <button class="btn btn-secondary" id="btn-configureBuild">${this.icon('settings')} Configure build command ${this.icon('chevron')}</button>
       </section>
 
       <section class="card create-card">
         <div class="create-icon">${this.icon('plus', 'icon-lg')}</div>
         <div>
-          <h2 class="title-md">创建仓库</h2>
-          <p class="description">连接或导入新的 GitHub 仓库进行部署</p>
+          <h2 class="title-md">Create repository</h2>
+          <p class="description">Connect or import a new GitHub repository for deployment</p>
         </div>
-        <button class="btn btn-purple" id="btn-createRepo">${this.icon('plus')} 创建新仓库</button>
+        <button class="btn btn-purple" id="btn-createRepo">${this.icon('plus')} Create new repository</button>
       </section>
 
       <section class="card status-card">
         <div class="status-item">
           <div class="status-medal">${this.icon('check')}</div>
           <div>
-            <h2 class="status-title" id="sync-status">已同步 5 个仓库</h2>
-            <p class="status-desc" id="sync-subtext">所有仓库已是最新状态</p>
+            <h2 class="status-title" id="sync-status">Synced 5 repositories</h2>
+            <p class="status-desc" id="sync-subtext">All repositories are up to date</p>
           </div>
         </div>
         <div class="status-separator"></div>
         <div class="status-item">
           <div class="status-medal">${this.icon('check-circle')}</div>
           <div>
-            <h2 class="status-title" id="ready-status">就绪</h2>
-            <p class="status-desc" id="ready-subtext">系统运行正常，可随时部署</p>
+            <h2 class="status-title" id="ready-status">Ready</h2>
+            <p class="status-desc" id="ready-subtext">System is running normally; ready to deploy</p>
           </div>
         </div>
       </section>
@@ -1083,8 +1083,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     avatarUrl: 'https://github.com/CyanQX.png?size=96',
     repoName: 'CyanQX/GitPilot_main',
     buildCmd: '',
-    status: '就绪',
-    statusText: '已同步 5 个仓库',
+    status: 'Ready',
+    statusText: 'Synced 5 repositories',
     refreshState: ''
   };
 
@@ -1123,7 +1123,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     var repoName = state.repoName || 'CyanQX/GitPilot_main';
     setText('account-name', loginName);
     setText('repo-name', repoName);
-    setText('build-cmd', state.buildCmd && state.buildCmd.trim() ? state.buildCmd : '未配置');
+    setText('build-cmd', state.buildCmd && state.buildCmd.trim() ? state.buildCmd : 'Not configured');
 
     var avatarImg = document.getElementById('avatar-img');
     var avatarFallback = document.getElementById('avatar-fallback');
@@ -1139,25 +1139,25 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     avatarImg.src = state.avatarUrl || 'https://github.com/CyanQX.png?size=96';
 
     if (state.refreshState === 'start') {
-      setText('sync-status', '正在同步仓库');
-      setText('sync-subtext', '正在刷新最新仓库与代码状态');
-      setText('ready-status', '刷新中');
-      setText('ready-subtext', '请稍候，系统正在检查状态');
+      setText('sync-status', 'Syncing repositories');
+      setText('sync-subtext', 'Refreshing the latest repository and code status');
+      setText('ready-status', 'Refreshing');
+      setText('ready-subtext', 'Please wait — the system is checking the status');
       return;
     }
 
     if (state.refreshState === 'error') {
-      setText('sync-status', state.statusText || '刷新失败');
-      setText('sync-subtext', '请检查网络或 GitHub 账号状态');
-      setText('ready-status', sanitizeStatus(state.status, '需要处理'));
-      setText('ready-subtext', '状态刷新未完成，建议稍后重试');
+      setText('sync-status', state.statusText || 'Refresh failed');
+      setText('sync-subtext', 'Please check your network or GitHub account status');
+      setText('ready-status', sanitizeStatus(state.status, 'Needs attention'));
+      setText('ready-subtext', 'The status refresh did not finish; please try again later');
       return;
     }
 
-    setText('sync-status', state.statusText || '已同步 5 个仓库');
-    setText('sync-subtext', '所有仓库已是最新状态');
-    setText('ready-status', sanitizeStatus(state.status, '就绪'));
-    setText('ready-subtext', '系统运行正常，可随时部署');
+    setText('sync-status', state.statusText || 'Synced 5 repositories');
+    setText('sync-subtext', 'All repositories are up to date');
+    setText('ready-status', sanitizeStatus(state.status, 'Ready'));
+    setText('ready-subtext', 'System is running normally; ready to deploy');
   }
 
   function renderLoggedOut(){
@@ -1177,8 +1177,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (msg.avatarUrl !== undefined) state.avatarUrl = msg.avatarUrl || 'https://github.com/CyanQX.png?size=96';
     if (msg.repoName !== undefined) state.repoName = msg.repoName || 'CyanQX/GitPilot_main';
     if (msg.buildCmd !== undefined) state.buildCmd = msg.buildCmd || '';
-    if (msg.status !== undefined) state.status = msg.status || '就绪';
-    if (msg.statusText !== undefined) state.statusText = msg.statusText || '已同步 5 个仓库';
+    if (msg.status !== undefined) state.status = msg.status || 'Ready';
+    if (msg.statusText !== undefined) state.statusText = msg.statusText || 'Synced 5 repositories';
     if (msg.refreshState !== undefined) state.refreshState = msg.refreshState || '';
     render();
   });

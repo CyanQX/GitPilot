@@ -1,32 +1,32 @@
 // ============================================================
-// IRepositoryProvider — 仓库管理抽象
-// 所有 Git 托管平台必须实现此接口
+// IRepositoryProvider — repository management abstraction
+// Every Git hosting platform must implement this interface
 // ============================================================
 
 import type { Repository, Branch, CreateRepoOptions } from '../models/repository';
 
 export interface IRepositoryProvider {
-  /** 平台标识（用于日志和 UI 展示） */
+  /** Platform identifier (used for logging and UI display) */
   readonly platform: string;
 
-  /** 列出当前用户的所有仓库 */
+  /** List all repositories of the current user */
   listRepos(): Promise<Repository[]>;
 
-  /** 获取指定仓库详情 */
+  /** Get details of a specific repository */
   getRepo(owner: string, repo: string): Promise<Repository>;
 
-  /** 创建新仓库 */
+  /** Create a new repository */
   createRepo(options: CreateRepoOptions): Promise<Repository>;
 
-  /** 删除仓库 */
+  /** Delete a repository */
   deleteRepo(owner: string, repo: string): Promise<void>;
 
-  /** 列出仓库分支 */
+  /** List repository branches */
   listBranches(owner: string, repo: string): Promise<Branch[]>;
 
-  /** 获取默认分支 */
+  /** Get the default branch */
   getDefaultBranch(owner: string, repo: string): Promise<string>;
 
-  /** 检测远端是否有本地没有的新提交（返回领先的提交数） */
+  /** Check whether the remote has new commits the local repo lacks (returns the number of commits ahead) */
   checkRemoteAhead(owner: string, repo: string, localBranch: string): Promise<number>;
 }

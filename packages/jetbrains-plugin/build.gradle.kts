@@ -1,6 +1,7 @@
-// JetBrains Plugin — Gradle 构建配置 (Kotlin DSL)
-// 新架构：Core 接口由 Kotlin 端重新定义（因为跨语言无法共享 TS 接口）
-// GitHub Provider 在此项目中实现
+// JetBrains Plugin — Gradle build configuration (Kotlin DSL)
+// New architecture: Core interfaces are redefined on the Kotlin side
+// (TS interfaces cannot be shared across languages).
+// The GitHub Provider is implemented in this project.
 // ============================================================
 
 plugins {
@@ -16,13 +17,13 @@ repositories { mavenCentral() }
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    // HTTP 客户端（GitHub API）
+    // HTTP client (GitHub API)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.code.gson:gson:2.10.1")
-    // 协程
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.7.3")
-    // 测试
+    // Testing
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
 }
 

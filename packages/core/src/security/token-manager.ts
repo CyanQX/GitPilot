@@ -1,6 +1,6 @@
 // ============================================================
-// TokenManager — 多账号 Token 管理
-// 依赖 ISecretStorage，不依赖任何平台
+// TokenManager — multi-account Token management
+// Depends on ISecretStorage, no platform dependencies
 // ============================================================
 
 import type { ISecretStorage } from '../interfaces/ISecretStorage';
@@ -15,7 +15,7 @@ export class TokenManager {
 
   constructor(private storage: ISecretStorage) {}
 
-  /** 保存 Token */
+  /** Save a Token */
   async save(login: string, token: string, platform: string): Promise<void> {
     await this.storage.set(TokenManager.PREFIX + login, token);
 
@@ -34,22 +34,22 @@ export class TokenManager {
     await this.storage.set(TokenManager.ACCOUNTS_KEY, JSON.stringify(accounts));
     await this.storage.set(TokenManager.ACTIVE_KEY, login);
 
-    this.logger.info(`Token 已保存: ${login} (${platform})`);
+    this.logger.info(`Token saved: ${login} (${platform})`);
   }
 
-  /** 获取活跃账号 Token */
+  /** Get the active account's Token */
   async getActive(): Promise<string | null> {
     const login = await this.storage.get(TokenManager.ACTIVE_KEY);
     if (!login) return null;
     return (await this.storage.get(TokenManager.PREFIX + login)) ?? null;
   }
 
-  /** 获取指定账号 Token */
+  /** Get the Token for a specific account */
   async get(login: string): Promise<string | null> {
     return (await this.storage.get(TokenManager.PREFIX + login)) ?? null;
   }
 
-  /** 删除 Token */
+  /** Delete a Token */
   async delete(login: string): Promise<void> {
     await this.storage.delete(TokenManager.PREFIX + login);
 
@@ -67,35 +67,35 @@ export class TokenManager {
       }
     }
 
-    this.logger.info(`Token 已删除: ${login}`);
+    this.logger.info(`Token deleted: ${login}`);
   }
 
-  /** 获取所有账号 */
+  /** Get all accounts */
   async getAccounts(): Promise<StoredAccount[]> {
     const raw = await this.storage.get(TokenManager.ACCOUNTS_KEY);
     if (!raw) return [];
     try { return JSON.parse(raw); } catch { return []; }
   }
 
-  /** 切换活跃账号 */
+  /** Switch the active account */
   async switchTo(login: string): Promise<void> {
     const token = await this.get(login);
-    if (!token) throw new Error(`未找到账号 ${login} 的 Token`);
+    if (!token) throw new Error(`No Token found for account ${login}`);
     await this.storage.set(TokenManager.ACTIVE_KEY, login);
-    this.logger.info(`已切换到: ${login}`);
+    this.logger.info(`Switched to: ${login}`);
   }
 
-  /** 获取活跃账号名 */
+  /** Get the active account login */
   async getActiveLogin(): Promise<string | null> {
     return (await this.storage.get(TokenManager.ACTIVE_KEY)) ?? null;
   }
 
-  /** 是否有已登录账号 */
+  /** Whether there is a logged-in account */
   async hasAccount(): Promise<boolean> {
     return (await this.getActive()) !== null;
   }
 
-  /** 清除所有 */
+  /** Clear everything */
   async clearAll(): Promise<void> {
     const accounts = await this.getAccounts();
     for (const a of accounts) {
@@ -103,6 +103,6 @@ export class TokenManager {
     }
     await this.storage.delete(TokenManager.ACCOUNTS_KEY);
     await this.storage.delete(TokenManager.ACTIVE_KEY);
-    this.logger.info('所有 Token 已清除');
+    this.logger.info('All tokens cleared');
   }
 }

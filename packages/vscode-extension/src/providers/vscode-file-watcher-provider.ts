@@ -1,6 +1,6 @@
 // ============================================================
-// VSCodeFileWatcherProvider — 实现 IFileWatcherProvider
-// 基于 chokidar
+// VSCodeFileWatcherProvider — implements IFileWatcherProvider
+// Based on chokidar
 // ============================================================
 
 import type { IFileWatcherProvider, FileChangeEvent, WatchConfig, FileChangeCallback } from '@gitpilot/core';

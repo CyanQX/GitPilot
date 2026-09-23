@@ -1,7 +1,7 @@
 // ============================================================
-// GitPilot JetBrains — DeployOrchestrator (Kotlin) v1.2.9 同步
-// 完全对标 VS Code 版 deploy-orchestrator.ts 全部功能
-// 包括：未推送提交检测、分支验证、文件过滤、Release
+// GitPilot JetBrains — DeployOrchestrator (Kotlin) v1.2.9 sync
+// Fully aligned with every feature of the VS Code deploy-orchestrator.ts
+// Including: unpushed-commit detection, branch verification, file filtering, Release
 // ============================================================
 
 package com.gitpilot.core
@@ -11,7 +11,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
 
-// ── 数据类 ──
+// ── Data classes ──
 
 enum class DeployStatus { IDLE, BUILDING, STAGING, COMMITTING, PUSHING, RELEASING, SUCCESS, FAILED, NO_CHANGES }
 
@@ -42,7 +42,7 @@ data class FilterResult(
     val blocked: List<Pair<String, String>>
 )
 
-// ── 接口（完整版，对齐 TS interfaces/）──
+// ── Interfaces (full version, aligned with the TS interfaces/) ──
 
 interface IRepoProvider {
     val platform: String
@@ -73,7 +73,7 @@ interface IReleaseProvider {
     fun createRelease(owner: String, repo: String, tag: String, name: String, commitHash: String?, prerelease: Boolean, draft: Boolean): ReleaseResult?
 }
 
-// ── 数据类 ──
+// ── Data classes ──
 
 data class GitHubRepo(val id: Long, val name: String, val fullName: String, val owner: String, val isPrivate: Boolean, val htmlUrl: String, val cloneUrl: String, val defaultBranch: String)
 data class GitStatus(val isClean: Boolean, val modified: List<String>, val added: List<String> = emptyList(), val deleted: List<String> = emptyList(), val untracked: List<String> = emptyList(), val currentBranch: String, val ahead: Int = 0, val behind: Int = 0)
@@ -106,33 +106,33 @@ class DeployOrchestrator(private val project: Project) {
         val steps = mutableListOf<DeployStep>()
 
         try {
-            // ═══ Step 1: 检查变更 ═══
-            indicator.text = "检查文件变更..."
+            // ═══ Step 1: Check for changes ═══
+            indicator.text = "Checking file changes..."
             indicator.fraction = 0.1
-            val stepCheck = DeployStep("检查文件变更")
+            val stepCheck = DeployStep("Checking file changes")
             val hasChanges = gitProvider.hasChanges()
             val gitStatus = gitProvider.getStatus()
             val hasUnpushedCommits = (gitStatus?.ahead ?: 0) > 0
 
-            // 既无变更也无未推送提交 → 跳过
+            // Neither changes nor unpushed commits → skip
             if (!hasChanges && !hasUnpushedCommits) {
-                stepCheck.status = "skipped"; stepCheck.details = "没有需要部署的变更"; stepCheck.finish(); steps.add(stepCheck)
+                stepCheck.status = "skipped"; stepCheck.details = "No changes to deploy"; stepCheck.finish(); steps.add(stepCheck)
                 currentStatus = DeployStatus.NO_CHANGES
                 return DeployResult(true, DeployStatus.NO_CHANGES, steps, durationMs = System.currentTimeMillis() - startTime)
             }
 
-            // 有未推送提交但无新变更 → 直接推送
+            // Unpushed commits but no new changes → push directly
             if (!hasChanges && hasUnpushedCommits) {
-                stepCheck.status = "success"; stepCheck.details = "无新变更，${gitStatus!!.ahead} 个提交未推送"; stepCheck.finish(); steps.add(stepCheck)
+                stepCheck.status = "success"; stepCheck.details = "No new changes, ${gitStatus!!.ahead} commit(s) not pushed"; stepCheck.finish(); steps.add(stepCheck)
                 return doPushOnly(indicator, gitProvider, steps, startTime)
             }
 
             stepCheck.status = "success"; stepCheck.finish(); steps.add(stepCheck)
 
-            // ═══ Step 2: 智能过滤 ═══
-            indicator.text = "智能文件过滤..."
+            // ═══ Step 2: Smart filtering ═══
+            indicator.text = "Smart file filtering..."
             indicator.fraction = 0.2
-            val stepFilter = DeployStep("智能文件过滤")
+            val stepFilter = DeployStep("Smart file filtering")
             val allChanged = mutableListOf<String>()
             gitStatus?.let {
                 allChanged.addAll(it.modified); allChanged.addAll(it.added)
@@ -140,53 +140,53 @@ class DeployOrchestrator(private val project: Project) {
             }
             val filterResult = smartFilter?.filter(allChanged) ?: FilterResult(allChanged, emptyList())
             stepFilter.status = "success"
-            stepFilter.details = "${filterResult.allowed.size} 个文件待部署"
-            if (filterResult.blocked.isNotEmpty()) stepFilter.details += "，已排除 ${filterResult.blocked.size} 个"
+            stepFilter.details = "${filterResult.allowed.size} file(s) to deploy"
+            if (filterResult.blocked.isNotEmpty()) stepFilter.details += ", excluded ${filterResult.blocked.size}"
             stepFilter.finish(); steps.add(stepFilter)
 
-            // ═══ Step 3: Build（可选）═══
+            // ═══ Step 3: Build (optional) ═══
             if (buildBeforeDeploy && buildCommand != null && buildProvider != null) {
-                indicator.text = "构建项目..."
+                indicator.text = "Building project..."
                 indicator.fraction = 0.35
-                val stepBuild = DeployStep("构建项目")
+                val stepBuild = DeployStep("Building project")
                 val result = buildProvider.run(buildCommand, indicator)
                 stepBuild.status = if (result.success) "success" else "failed"
                 stepBuild.error = result.error; stepBuild.details = result.output?.takeLast(200)
                 stepBuild.finish(); steps.add(stepBuild)
                 if (!result.success && blockOnBuildFailure) {
                     currentStatus = DeployStatus.FAILED
-                    return DeployResult(false, DeployStatus.FAILED, steps, error = "Build 失败: ${result.error}", durationMs = System.currentTimeMillis() - startTime)
+                    return DeployResult(false, DeployStatus.FAILED, steps, error = "Build failed: ${result.error}", durationMs = System.currentTimeMillis() - startTime)
                 }
             }
 
-            // ═══ Step 4: 暂存 ═══
-            indicator.text = "暂存文件..."
+            // ═══ Step 4: Stage ═══
+            indicator.text = "Staging files..."
             indicator.fraction = 0.5
-            val stepStage = DeployStep("暂存文件")
+            val stepStage = DeployStep("Staging files")
             val excludedPaths = filterResult.blocked.map { it.first }
             val staged = gitProvider.stageFiles(excludedPaths)
             val stagedFiles = gitProvider.getStagedFiles()
             stepStage.status = if (staged) "success" else "failed"
-            stepStage.details = if (stagedFiles.isNotEmpty()) "已暂存 ${stagedFiles.size} 个文件" else "${filterResult.allowed.size} 个文件待提交"
-            if (!staged) stepStage.error = "暂存失败"
+            stepStage.details = if (stagedFiles.isNotEmpty()) "Staged ${stagedFiles.size} file(s)" else "${filterResult.allowed.size} file(s) to commit"
+            if (!staged) stepStage.error = "Staging failed"
             stepStage.finish(); steps.add(stepStage)
-            if (!staged) return DeployResult(false, DeployStatus.FAILED, steps, error = "暂存失败", durationMs = System.currentTimeMillis() - startTime)
+            if (!staged) return DeployResult(false, DeployStatus.FAILED, steps, error = "Staging failed", durationMs = System.currentTimeMillis() - startTime)
             if (stagedFiles.isEmpty() && filterResult.allowed.isEmpty()) {
                 currentStatus = DeployStatus.NO_CHANGES
                 return DeployResult(true, DeployStatus.NO_CHANGES, steps, durationMs = System.currentTimeMillis() - startTime)
             }
 
-            // ═══ Step 5: 提交 ═══
-            indicator.text = "提交变更..."
+            // ═══ Step 5: Commit ═══
+            indicator.text = "Committing changes..."
             indicator.fraction = 0.65
-            val stepCommit = DeployStep("提交变更")
+            val stepCommit = DeployStep("Committing changes")
             val commitResult = gitProvider.commit(commitMessage)
             stepCommit.status = if (commitResult.success) "success" else "failed"
             stepCommit.error = commitResult.error; stepCommit.details = commitResult.hash?.take(7)
             stepCommit.finish(); steps.add(stepCommit)
-            if (!commitResult.success) return DeployResult(false, DeployStatus.FAILED, steps, error = "提交失败", durationMs = System.currentTimeMillis() - startTime)
+            if (!commitResult.success) return DeployResult(false, DeployStatus.FAILED, steps, error = "Commit failed", durationMs = System.currentTimeMillis() - startTime)
 
-            // ═══ Step 6: 推送 ═══
+            // ═══ Step 6: Push ═══
             return doPush(indicator, gitProvider, releaseProvider, commitResult.hash, steps, startTime)
 
         } catch (e: Exception) {
@@ -196,46 +196,46 @@ class DeployOrchestrator(private val project: Project) {
         }
     }
 
-    /** 仅推送（无新变更时） */
+    /** Push only (when there are no new changes) */
     private fun doPushOnly(indicator: ProgressIndicator, gitProvider: IGitProvider, steps: MutableList<DeployStep>, startTime: Long): DeployResult {
-        indicator.text = "推送到 GitHub..."; indicator.fraction = 0.7
-        val stepPush = DeployStep("推送到 GitHub")
+        indicator.text = "Pushing to GitHub..."; indicator.fraction = 0.7
+        val stepPush = DeployStep("Pushing to GitHub")
         val pushResult = gitProvider.push()
         stepPush.status = if (pushResult.success) "success" else "failed"
-        stepPush.error = pushResult.error; stepPush.details = if (pushResult.pushed) "已推送" else "远端已是最新"
+        stepPush.error = pushResult.error; stepPush.details = if (pushResult.pushed) "Pushed" else "Remote is already up to date"
         stepPush.finish(); steps.add(stepPush)
         if (!pushResult.success) {
-            val msg = if (pushResult.nonFastForward) "推送冲突：远端有新提交，请先执行 Sync" else "推送失败: ${pushResult.error}"
+            val msg = if (pushResult.nonFastForward) "Push conflict: the remote has new commits, please run Sync first" else "Push failed: ${pushResult.error}"
             return DeployResult(false, DeployStatus.FAILED, steps, error = msg, durationMs = System.currentTimeMillis() - startTime)
         }
         currentStatus = DeployStatus.SUCCESS
         return DeployResult(true, DeployStatus.SUCCESS, steps, durationMs = System.currentTimeMillis() - startTime)
     }
 
-    /** 完整推送 + Release */
+    /** Full push + Release */
     private fun doPush(indicator: ProgressIndicator, gitProvider: IGitProvider, releaseProvider: IReleaseProvider?, commitHash: String?, steps: MutableList<DeployStep>, startTime: Long): DeployResult {
-        indicator.text = "推送到 GitHub..."; indicator.fraction = 0.8
-        val stepPush = DeployStep("推送到 GitHub")
+        indicator.text = "Pushing to GitHub..."; indicator.fraction = 0.8
+        val stepPush = DeployStep("Pushing to GitHub")
         val pushResult = gitProvider.push()
         stepPush.status = if (pushResult.success) "success" else "failed"
-        stepPush.error = pushResult.error; stepPush.details = if (pushResult.pushed) "已推送" else "远端已是最新"
+        stepPush.error = pushResult.error; stepPush.details = if (pushResult.pushed) "Pushed" else "Remote is already up to date"
         stepPush.finish(); steps.add(stepPush)
         if (!pushResult.success) {
-            val msg = if (pushResult.nonFastForward) "推送冲突：远端有新提交，请先执行 Sync" else "推送失败: ${pushResult.error}"
+            val msg = if (pushResult.nonFastForward) "Push conflict: the remote has new commits, please run Sync first" else "Push failed: ${pushResult.error}"
             return DeployResult(false, DeployStatus.FAILED, steps, commitHash = commitHash, error = msg, durationMs = System.currentTimeMillis() - startTime)
         }
 
-        // ═══ Step 7: Release（可选）═══
+        // ═══ Step 7: Release (optional) ═══
         var releaseUrl: String? = null
         if (releaseProvider != null) {
-            indicator.text = "创建 Release..."; indicator.fraction = 0.95
-            val stepRelease = DeployStep("创建 Release")
+            indicator.text = "Creating Release..."; indicator.fraction = 0.95
+            val stepRelease = DeployStep("Creating Release")
             try {
                 val tag = "v${System.currentTimeMillis() / 1000}"
                 val release = releaseProvider.createRelease("unknown", "unknown", tag, tag, commitHash, false, false)
                 if (release != null) {
                     releaseUrl = release.htmlUrl; stepRelease.status = "success"; stepRelease.details = tag
-                } else { stepRelease.status = "skipped"; stepRelease.details = "Release 未启用" }
+                } else { stepRelease.status = "skipped"; stepRelease.details = "Release not enabled" }
             } catch (e: Exception) { stepRelease.status = "failed"; stepRelease.error = e.message }
             stepRelease.finish(); steps.add(stepRelease)
         }
@@ -255,7 +255,7 @@ class DeployOrchestrator(private val project: Project) {
         blockOnBuildFailure: Boolean,
         smartFilter: SmartFilter?
     ): DeployResult {
-        indicator.text = "拉取远端更新..."
+        indicator.text = "Pulling remote updates..."
         gitProvider.pull()
         return deploy(indicator, repoProvider, gitProvider, buildProvider, releaseProvider, buildCommand, buildBeforeDeploy, blockOnBuildFailure, smartFilter)
     }

@@ -1,23 +1,23 @@
 // ============================================================
-// IReleaseProvider — Release 发布抽象
+// IReleaseProvider — Release publishing abstraction
 // ============================================================
 
 import type { Release, ReleaseAsset, CreateReleaseOptions } from '../models/release';
 
 export interface IReleaseProvider {
-  /** 平台标识 */
+  /** Platform identifier */
   readonly platform: string;
 
-  /** 创建 Release */
+  /** Create a Release */
   createRelease(owner: string, repo: string, options: CreateReleaseOptions): Promise<Release>;
 
-  /** 列出仓库所有 Release */
+  /** List all Releases of a repository */
   listReleases(owner: string, repo: string): Promise<Release[]>;
 
-  /** 获取最新 Release */
+  /** Get the latest Release */
   getLatestRelease(owner: string, repo: string): Promise<Release | null>;
 
-  /** 上传 Release 资产 */
+  /** Upload a Release asset */
   uploadAsset(
     owner: string,
     repo: string,
@@ -26,6 +26,6 @@ export interface IReleaseProvider {
     fileName?: string,
   ): Promise<ReleaseAsset>;
 
-  /** 删除 Release */
+  /** Delete a Release */
   deleteRelease(owner: string, repo: string, releaseId: number): Promise<void>;
 }

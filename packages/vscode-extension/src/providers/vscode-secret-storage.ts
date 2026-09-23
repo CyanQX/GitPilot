@@ -1,6 +1,6 @@
 // ============================================================
-// VSCodeSecretStorage — 实现 ISecretStorage
-// 对接 VS Code SecretStorage API
+// VSCodeSecretStorage — implements ISecretStorage
+// Bridges the VS Code SecretStorage API
 // ============================================================
 
 import type { ISecretStorage } from '@gitpilot/core';

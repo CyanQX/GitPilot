@@ -1,5 +1,5 @@
 // ============================================================
-// Git 操作数据模型
+// Git operations data models
 // ============================================================
 
 export interface GitStatus {
@@ -26,6 +26,6 @@ export interface PushResult {
   success: boolean;
   pushed: boolean;
   error?: string;
-  /** 是否因为 non-fast-forward 被拒绝 */
+  /** Whether the push was rejected because of non-fast-forward */
   nonFastForward?: boolean;
 }

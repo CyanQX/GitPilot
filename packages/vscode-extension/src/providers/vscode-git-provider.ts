@@ -101,7 +101,7 @@ export class VSCodeGitProvider implements IGitProvider {
       if (!remoteExists) {
         return {
           success: false, pushed: false,
-          error: 'ORIGIN_MISSING:未关联 GitHub 仓库',
+          error: 'ORIGIN_MISSING:No GitHub repository linked',
           nonFastForward: false,
         };
       }
@@ -109,7 +109,7 @@ export class VSCodeGitProvider implements IGitProvider {
       const error = this.normalizeGitError(e);
       return {
         success: false, pushed: false,
-        error: this.isKnownEnvironmentError(error) ? error : 'ORIGIN_MISSING:当前目录不是 Git 仓库',
+        error: this.isKnownEnvironmentError(error) ? error : 'ORIGIN_MISSING:The current directory is not a Git repository',
         nonFastForward: false,
       };
     }
@@ -125,7 +125,7 @@ export class VSCodeGitProvider implements IGitProvider {
       } else {
         return {
           success: false, pushed: false,
-          error: `本地分支 "${branch ?? target}" 不存在。请先在 Git 中创建初始提交（git commit）。`,
+          error: `The local branch "${branch ?? target}" does not exist. Please create an initial commit first (git commit).`,
           nonFastForward: false,
         };
       }
@@ -135,7 +135,7 @@ export class VSCodeGitProvider implements IGitProvider {
       await this.git.fetch(remote);
       const s = await this.git.status();
       if (s.behind > 0) {
-        return { success: false, pushed: false, error: '远端有新的提交，请先 Sync', nonFastForward: true };
+        return { success: false, pushed: false, error: 'The remote has new commits, please run Sync first', nonFastForward: true };
       }
       const r = await this.git.push(remote, target);
       return { success: true, pushed: r.pushed?.length > 0 && !r.pushed[0]?.alreadyUpdated };
@@ -147,16 +147,16 @@ export class VSCodeGitProvider implements IGitProvider {
         return { success: false, pushed: false, error: msg, nonFastForward: false };
       }
       if (msg.includes('Connection was reset') || msg.includes('Connection reset')) {
-        return { success: false, pushed: false, error: 'NETWORK_RESET:网络连接被重置，请检查网络或稍后重试', nonFastForward: false };
+        return { success: false, pushed: false, error: 'NETWORK_RESET:The network connection was reset. Please check your network or try again later.', nonFastForward: false };
       }
       if (msg.includes('unable to access') || msg.includes('Could not resolve host')) {
-        return { success: false, pushed: false, error: 'NETWORK_UNREACHABLE:无法访问 GitHub，请检查网络连接', nonFastForward: false };
+        return { success: false, pushed: false, error: 'NETWORK_UNREACHABLE:Unable to reach GitHub. Please check your network connection.', nonFastForward: false };
       }
       if (msg.includes('timeout') || msg.includes('timed out')) {
-        return { success: false, pushed: false, error: 'NETWORK_TIMEOUT:连接 GitHub 超时，请检查网络或代理设置', nonFastForward: false };
+        return { success: false, pushed: false, error: 'NETWORK_TIMEOUT:Timed out connecting to GitHub. Please check your network or proxy settings.', nonFastForward: false };
       }
       if (msg.includes('Recv failure')) {
-        return { success: false, pushed: false, error: 'NETWORK_RESET:网络连接被重置，请检查网络或稍后重试', nonFastForward: false };
+        return { success: false, pushed: false, error: 'NETWORK_RESET:The network connection was reset. Please check your network or try again later.', nonFastForward: false };
       }
 
       return { success: false, pushed: false, error: msg, nonFastForward: nff };
@@ -371,7 +371,7 @@ export class VSCodeGitProvider implements IGitProvider {
       lowerMessage.includes('not in a git directory') ||
       lowerMessage.includes('outside repository')
     ) {
-      return `${NOT_GIT_REPO_PREFIX}当前文件夹还不是 Git 仓库。请先创建或关联 GitHub 仓库，GitPilot 会自动初始化本地 Git。`;
+      return `${NOT_GIT_REPO_PREFIX}The current folder is not a Git repository yet. Please create or link a GitHub repository first; GitPilot will initialize local Git automatically.`;
     }
 
     if (
@@ -379,7 +379,7 @@ export class VSCodeGitProvider implements IGitProvider {
       lowerMessage.includes('please tell me who you are') ||
       lowerMessage.includes('unable to auto-detect email address')
     ) {
-      return `${GIT_AUTHOR_MISSING_PREFIX}Git 提交作者身份未配置。请设置 user.name 和 user.email 后重试。`;
+      return `${GIT_AUTHOR_MISSING_PREFIX}The Git commit author identity is not configured. Please set user.name and user.email and retry.`;
     }
 
     if (
@@ -389,10 +389,10 @@ export class VSCodeGitProvider implements IGitProvider {
       message.includes('cannot find') ||
       message.includes('not found')
     ) {
-      return `${GIT_NOT_FOUND_PREFIX}未找到 Git 可执行文件（当前尝试：${this.gitBinary}）。请确认已安装 Git，或在 VS Code 设置 gitpilot.git.path / git.path 指向 git.exe。`;
+      return `${GIT_NOT_FOUND_PREFIX}Git executable not found (currently trying: ${this.gitBinary}). Please make sure Git is installed, or point the VS Code settings gitpilot.git.path / git.path to git.exe.`;
     }
 
-    return message || 'Git 执行失败';
+    return message || 'Git execution failed';
   }
 
   private isKnownEnvironmentError(message: string): boolean {

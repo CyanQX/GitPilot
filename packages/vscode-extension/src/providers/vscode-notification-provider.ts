@@ -1,5 +1,5 @@
 // ============================================================
-// VSCodeNotificationProvider — 实现 INotificationProvider
+// VSCodeNotificationProvider — implements INotificationProvider
 // ============================================================
 
 import type { INotificationProvider, NotificationPayload, NotificationAction } from '@gitpilot/core';

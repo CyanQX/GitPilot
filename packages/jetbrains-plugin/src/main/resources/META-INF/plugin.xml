@@ -1,6 +1,6 @@
 // ============================================================
 // GitPilot JetBrains Plugin — plugin.xml
-// 新架构：Core 接口 + GitHub Provider + 平台 UI
+// New architecture: Core interfaces + GitHub Provider + platform UI
 // ============================================================
 
 <idea-plugin>
@@ -9,15 +9,15 @@
     <vendor email="support@gitpilot.dev" url="https://github.com/MuXi/GitPilot">GitPilot</vendor>
 
     <description><![CDATA[
-        <h2>🚀 写代码 → 点部署 → GitHub 上就有了</h2>
-        <p><b>GitPilot 不是 Git 工具。</b>它是 GitHub 一键发布平台。</p>
-        <p>架构：Core 接口 + Provider 实现 + 平台 UI 三层分离。</p>
+        <h2>🚀 Write code → Click deploy → It's on GitHub</h2>
+        <p><b>GitPilot is not a Git tool.</b> It is a one-click publishing platform for GitHub.</p>
+        <p>Architecture: three separated layers — Core interfaces + Provider implementations + platform UI.</p>
         <ul>
-            <li>一键部署（自动 commit + push）</li>
-            <li>一键同步（pull + push）</li>
-            <li>GitHub 仓库管理</li>
-            <li>自动 Release 发布</li>
-            <li>智能文件过滤 + 密钥检测</li>
+            <li>One-click deploy (automatic commit + push)</li>
+            <li>One-click sync (pull + push)</li>
+            <li>GitHub repository management</li>
+            <li>Automatic Release publishing</li>
+            <li>Smart file filtering + secret detection</li>
         </ul>
     ]]></description>
 

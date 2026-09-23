@@ -1,5 +1,5 @@
 // ============================================================
-// IFileWatcherProvider — 文件变更监听抽象
+// IFileWatcherProvider — file change watching abstraction
 // ============================================================
 
 export interface FileChangeEvent {
@@ -17,12 +17,12 @@ export interface WatchConfig {
 export type FileChangeCallback = (events: FileChangeEvent[]) => void;
 
 export interface IFileWatcherProvider {
-  /** 启动监听 */
+  /** Start watching */
   start(config: WatchConfig, callback: FileChangeCallback): Promise<void>;
 
-  /** 停止监听 */
+  /** Stop watching */
   stop(): Promise<void>;
 
-  /** 立即触发（跳过防抖） */
+  /** Fire immediately (skip the debounce) */
   flush(): void;
 }

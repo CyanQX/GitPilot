@@ -1,6 +1,6 @@
 // ============================================================
-// GitPilotSettings (Kotlin) — 持久化配置
-// 使用 IntelliJ PasswordSafe 安全存储 Token
+// GitPilotSettings (Kotlin) — persistent settings
+// Uses IntelliJ PasswordSafe for secure token storage
 // ============================================================
 
 package com.gitpilot.core
@@ -28,7 +28,7 @@ class GitPilotSettings : PersistentStateComponent<GitPilotSettings.State> {
     override fun getState(): State = myState
     override fun loadState(state: State) { myState = state }
 
-    // 便捷访问
+    // Convenient accessors
     var activeAccount: String get() = myState.activeAccount; set(v) { myState.activeAccount = v }
     var buildCommand: String get() = myState.buildCommand; set(v) { myState.buildCommand = v }
     var buildBeforeDeploy: Boolean get() = myState.buildBeforeDeploy; set(v) { myState.buildBeforeDeploy = v }

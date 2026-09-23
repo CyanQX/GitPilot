@@ -1,7 +1,7 @@
 // ============================================================
-// IntelliJGitProvider (Kotlin) v1.2.9 同步
-// 完全对标 VS Code vscode-git-provider.ts
-// 新增：分支验证、origin 检查、git add -A、getStagedFiles
+// IntelliJGitProvider (Kotlin) v1.2.9 sync
+// Fully aligned with VS Code vscode-git-provider.ts
+// Adds: branch verification, origin check, git add -A, getStagedFiles
 // ============================================================
 
 package com.gitpilot.core
@@ -42,7 +42,7 @@ class IntelliJGitProvider(private val project: Project) : IGitProvider {
         )
     }
 
-    /** ⭐ git add -A 全量暂存，再排除指定文件 */
+    /** ⭐ git add -A stages everything, then excludes the given files */
     override fun stageFiles(excludeFiles: List<String>): Boolean {
         val repo = getRepo() ?: return false
         return try {
@@ -59,14 +59,14 @@ class IntelliJGitProvider(private val project: Project) : IGitProvider {
                         val rmHandler = GitLineHandler(project, repo.root, GitCommand.RM)
                         rmHandler.addParameters("--cached", "-r", "--quiet", file)
                         git.runCommand(rmHandler)
-                    } catch (_: Exception) { /* 非关键 */ }
+                    } catch (_: Exception) { /* non-critical */ }
                 }
             }
             added
         } catch (e: Exception) { false }
     }
 
-    /** ⭐ 获取已暂存文件列表 */
+    /** ⭐ Get the list of staged files */
     override fun getStagedFiles(): List<String> {
         val repo = getRepo() ?: return emptyList()
         return try {
@@ -78,7 +78,7 @@ class IntelliJGitProvider(private val project: Project) : IGitProvider {
     }
 
     override fun commit(message: String): CommitResult {
-        val repo = getRepo() ?: return CommitResult(false, null, "未找到 Git 仓库")
+        val repo = getRepo() ?: return CommitResult(false, null, "Git repository not found")
         return try {
             val handler = GitLineHandler(project, repo.root, GitCommand.COMMIT)
             handler.addParameters("-m", message)
@@ -87,21 +87,21 @@ class IntelliJGitProvider(private val project: Project) : IGitProvider {
         } catch (e: Exception) { CommitResult(false, null, e.message) }
     }
 
-    /** ⭐ 推送（含 remote 存在性检查 + 分支验证） */
+    /** ⭐ Push (with remote existence check + branch verification) */
     override fun push(remote: String): PushResult {
-        val repo = getRepo() ?: return PushResult(false, false, "未找到 Git 仓库")
+        val repo = getRepo() ?: return PushResult(false, false, "Git repository not found")
 
         val remoteExists = repo.remotes.any { it.name == remote }
         if (!remoteExists) {
-            return PushResult(false, false, "远程仓库 '$remote' 未配置。请先关联 GitHub 仓库。")
+            return PushResult(false, false, "Remote repository '$remote' is not configured. Please link a GitHub repository first.")
         }
 
-        val targetBranch = repo.currentBranch?.name ?: return PushResult(false, false, "未检测到当前分支")
+        val targetBranch = repo.currentBranch?.name ?: return PushResult(false, false, "No current branch detected")
         try {
             val revHandler = GitLineHandler(project, repo.root, GitCommand.REV_PARSE)
             revHandler.addParameters("--verify", targetBranch)
             if (!git.runCommand(revHandler).success()) {
-                return PushResult(false, false, "本地分支 '$targetBranch' 不存在")
+                return PushResult(false, false, "The local branch '$targetBranch' does not exist")
             }
         } catch (_: Exception) {}
 
@@ -113,7 +113,7 @@ class IntelliJGitProvider(private val project: Project) : IGitProvider {
 
         val info = repo.currentBranch?.trackingInfo
         if (info != null && info.behind > 0) {
-            return PushResult(false, false, "远端有 ${info.behind} 个新提交，请先 Sync", nonFastForward = true)
+            return PushResult(false, false, "The remote has ${info.behind} new commit(s), please run Sync first", nonFastForward = true)
         }
 
         return try {

@@ -1,5 +1,5 @@
 // ============================================================
-// GitHubReleaseProvider — 实现 IReleaseProvider
+// GitHubReleaseProvider — implements IReleaseProvider
 // ============================================================
 
 import type { IReleaseProvider } from '@gitpilot/core';

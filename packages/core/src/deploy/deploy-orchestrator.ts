@@ -1,14 +1,15 @@
 // ============================================================
-// DeployOrchestrator — 核心部署编排器
-// 
-// 这是 GitPilot 的大脑。
-// 它不依赖 GitHub、不依赖 VS Code、不依赖 IntelliJ。
-// 它只依赖接口。所有平台通过实现接口来接入。
+// DeployOrchestrator — the core deploy orchestrator
 //
-// 流程：检查变更 → 过滤 → Build(可选) → 检查远端 →
-//       Stage → Commit → Push → Release(可选)
+// This is the brain of GitPilot.
+// It does not depend on GitHub, VS Code, or IntelliJ.
+// It only depends on interfaces. Every platform plugs in by
+// implementing those interfaces.
 //
-// 原则：Build 失败、推送冲突时一律中止并提示
+// Flow: check changes → filter → Build (optional) → check remote →
+//       Stage → Commit → Push → Release (optional)
+//
+// Principle: on build failure or push conflict, always abort and report
 // ============================================================
 
 import type { IDeployOrchestrator } from '../interfaces/IDeployOrchestrator';
@@ -55,7 +56,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
   }
 
   // ================================================================
-  //  核心部署流程
+  //  Core deploy flow
   // ================================================================
 
   async deploy(commitMessage?: string): Promise<DeployResult> {
@@ -64,33 +65,33 @@ export class DeployOrchestrator implements IDeployOrchestrator {
     const message = commitMessage ?? this.config.commitMessageTemplate ?? 'deploy: auto-deploy by GitPilot';
 
     try {
-      // ── Step 1: 检查变更 ──
-      const stepCheck = this.createStep('检查文件变更');
+      // ── Step 1: Check for changes ──
+      const stepCheck = this.createStep('Checking file changes');
       this.emit('staging', stepCheck);
 
       const hasChanges = await this.gitProvider.hasChanges();
       const gitStatus = await this.gitProvider.getStatus();
       const hasUnpushedCommits = (gitStatus.ahead ?? 0) > 0;
 
-      // ⭐ 既没有文件变更，也没有未推送的提交 → 跳过
+      // ⭐ Neither file changes nor unpushed commits → skip
       if (!hasChanges && !hasUnpushedCommits) {
         stepCheck.status = 'skipped';
-        stepCheck.details = '没有需要部署的变更';
+        stepCheck.details = 'No changes to deploy';
         this.finishStep(stepCheck);
         steps.push(stepCheck);
         this.currentStatus = 'no-changes';
         return { success: true, status: 'no-changes', steps, totalDurationMs: Date.now() - startTime };
       }
 
-      // ⭐ 有未推送提交但无文件变更 → 跳过暂存/提交，直接推送
+      // ⭐ Unpushed commits but no file changes → skip staging/commit, push directly
       if (!hasChanges && hasUnpushedCommits) {
         stepCheck.status = 'success';
-        stepCheck.details = `无新变更，但 ${gitStatus.ahead} 个提交未推送`;
+        stepCheck.details = `No new changes, but ${gitStatus.ahead} commit(s) not pushed`;
         this.finishStep(stepCheck);
         steps.push(stepCheck);
 
-        // 直接跳到推送
-        const stepPush = this.createStep('推送到远端');
+        // Jump straight to push
+        const stepPush = this.createStep('Pushing to remote');
         this.emit('pushing', stepPush);
         const pushResult = await this.gitProvider.push('origin', this.config.branch);
         if (!pushResult.success) {
@@ -101,12 +102,12 @@ export class DeployOrchestrator implements IDeployOrchestrator {
           this.currentStatus = 'failed';
           return {
             success: false, status: 'failed', steps,
-            error: `推送失败: ${pushResult.error}`,
+            error: `Push failed: ${pushResult.error}`,
             totalDurationMs: Date.now() - startTime,
           };
         }
         stepPush.status = 'success';
-        stepPush.details = '已推送';
+        stepPush.details = 'Pushed';
         this.finishStep(stepPush);
         steps.push(stepPush);
         this.currentStatus = 'success';
@@ -117,8 +118,8 @@ export class DeployOrchestrator implements IDeployOrchestrator {
       this.finishStep(stepCheck);
       steps.push(stepCheck);
 
-      // ── Step 2: 智能过滤 ──
-      const stepFilter = this.createStep('智能文件过滤');
+      // ── Step 2: Smart filtering ──
+      const stepFilter = this.createStep('Smart file filtering');
       this.emit('staging', stepFilter);
 
       const allChanged = [
@@ -130,19 +131,19 @@ export class DeployOrchestrator implements IDeployOrchestrator {
       const filterResult = this.smartFilter.filter(allChanged);
 
       if (filterResult.blocked.length > 0) {
-        this.logger.warn(`过滤了 ${filterResult.blocked.length} 个文件`);
+        this.logger.warn(`Filtered out ${filterResult.blocked.length} file(s)`);
       }
       stepFilter.status = 'success';
-      stepFilter.details = `${filterResult.allowed.length} 个文件待部署`;
+      stepFilter.details = `${filterResult.allowed.length} file(s) to deploy`;
       if (filterResult.blocked.length > 0) {
-        stepFilter.details += `，已过滤 ${filterResult.blocked.length} 个`;
+        stepFilter.details += `, filtered out ${filterResult.blocked.length}`;
       }
       this.finishStep(stepFilter);
       steps.push(stepFilter);
 
-      // ── Step 3: Build（可选）──
+      // ── Step 3: Build (optional) ──
       if (this.config.buildBeforeDeploy && this.config.buildCommand) {
-        const stepBuild = this.createStep('构建项目');
+        const stepBuild = this.createStep('Building project');
         this.emit('building', stepBuild);
 
         const buildResult = await this.buildProvider.runBuild({
@@ -152,7 +153,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
 
         if (!buildResult.success) {
           stepBuild.status = 'failed';
-          stepBuild.error = buildResult.error ?? 'Build 失败';
+          stepBuild.error = buildResult.error ?? 'Build failed';
           this.finishStep(stepBuild);
           stepBuild.durationMs = buildResult.durationMs;
           steps.push(stepBuild);
@@ -161,7 +162,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
             this.currentStatus = 'failed';
             return {
               success: false, status: 'failed', steps,
-              error: `Build 失败: ${buildResult.error}`,
+              error: `Build failed: ${buildResult.error}`,
               totalDurationMs: Date.now() - startTime,
             };
           }
@@ -174,8 +175,8 @@ export class DeployOrchestrator implements IDeployOrchestrator {
         steps.push(stepBuild);
       }
 
-      // ── Step 4: 检查远端状态 ──
-      const stepRemote = this.createStep('检查远端状态');
+      // ── Step 4: Check remote status ──
+      const stepRemote = this.createStep('Checking remote status');
       this.emit('staging', stepRemote);
 
       const branch = this.config.branch;
@@ -187,46 +188,46 @@ export class DeployOrchestrator implements IDeployOrchestrator {
 
       if (aheadCount > 0) {
         stepRemote.status = 'failed';
-        stepRemote.error = `远端领先 ${aheadCount} 个提交，请先执行 Sync`;
+        stepRemote.error = `Remote is ahead by ${aheadCount} commit(s); please run Sync first`;
         this.finishStep(stepRemote);
         steps.push(stepRemote);
         this.currentStatus = 'failed';
         return {
           success: false, status: 'failed', steps,
-          error: '远端有新提交（non-fast-forward），已中止推送。请先执行 Sync。',
+          error: 'The remote has new commits (non-fast-forward); push aborted. Please run Sync first.',
           totalDurationMs: Date.now() - startTime,
         };
       }
       stepRemote.status = 'success';
-      stepRemote.details = '远端状态正常';
+      stepRemote.details = 'Remote status OK';
       this.finishStep(stepRemote);
       steps.push(stepRemote);
 
-      // ── Step 5: 暂存 ──
-      const stepStage = this.createStep('暂存文件');
+      // ── Step 5: Stage ──
+      const stepStage = this.createStep('Staging files');
       this.emit('staging', stepStage);
-      // ⭐ git add -A 全部 → 排除 blocked 文件（密钥/构建产物等）
+      // ⭐ git add -A everything → exclude blocked files (secrets/build artifacts, etc.)
       await this.gitProvider.stageFiles(filterResult.blocked.map((b) => b.file));
-      // ⭐ 验证暂存结果
+      // ⭐ Verify the staging result
       const stagedFiles = await this.gitProvider.getStagedFiles();
       stepStage.status = 'success';
       stepStage.details = stagedFiles.length > 0
-        ? `已暂存 ${stagedFiles.length} 个文件`
-        : `${filterResult.allowed.length} 个文件待提交`;
+        ? `Staged ${stagedFiles.length} file(s)`
+        : `${filterResult.allowed.length} file(s) to commit`;
       if (filterResult.blocked.length > 0) {
-        stepStage.details += `，已排除 ${filterResult.blocked.length} 个`;
+        stepStage.details += `, excluded ${filterResult.blocked.length}`;
       }
       this.finishStep(stepStage);
       steps.push(stepStage);
 
-      // 如果没有文件被暂存，跳过提交
+      // If nothing was staged, skip the commit
       if (stagedFiles.length === 0 && filterResult.allowed.length === 0) {
         this.currentStatus = 'no-changes';
         return { success: true, status: 'no-changes', steps, totalDurationMs: Date.now() - startTime };
       }
 
-      // ── Step 6: 提交 ──
-      const stepCommit = this.createStep('提交变更');
+      // ── Step 6: Commit ──
+      const stepCommit = this.createStep('Committing changes');
       this.emit('committing', stepCommit);
       const commitResult = await this.gitProvider.commit(message);
 
@@ -238,7 +239,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
         this.currentStatus = 'failed';
         return {
           success: false, status: 'failed', steps,
-          error: `提交失败: ${commitResult.error}`,
+          error: `Commit failed: ${commitResult.error}`,
           totalDurationMs: Date.now() - startTime,
         };
       }
@@ -247,8 +248,8 @@ export class DeployOrchestrator implements IDeployOrchestrator {
       this.finishStep(stepCommit);
       steps.push(stepCommit);
 
-      // ── Step 7: 推送 ──
-      const stepPush = this.createStep('推送到远端');
+      // ── Step 7: Push ──
+      const stepPush = this.createStep('Pushing to remote');
       this.emit('pushing', stepPush);
       const pushResult = await this.gitProvider.push('origin', branch);
 
@@ -262,20 +263,20 @@ export class DeployOrchestrator implements IDeployOrchestrator {
           success: false, status: 'failed', steps,
           commitHash: commitResult.hash ?? undefined,
           error: pushResult.nonFastForward
-            ? '推送冲突：远端有新提交，请先执行 Sync'
-            : `推送失败: ${pushResult.error}`,
+            ? 'Push conflict: the remote has new commits, please run Sync first'
+            : `Push failed: ${pushResult.error}`,
           totalDurationMs: Date.now() - startTime,
         };
       }
       stepPush.status = 'success';
-      stepPush.details = pushResult.pushed ? '已推送' : '远端已是最新';
+      stepPush.details = pushResult.pushed ? 'Pushed' : 'Remote is already up to date';
       this.finishStep(stepPush);
       steps.push(stepPush);
 
-      // ── Step 8: Release（可选）──
+      // ── Step 8: Release (optional) ──
       let releaseUrl: string | undefined;
       if (this.config.release?.enabled) {
-        const stepRelease = this.createStep('创建 Release');
+        const stepRelease = this.createStep('Creating Release');
         this.emit('releasing', stepRelease);
 
         try {
@@ -301,14 +302,14 @@ export class DeployOrchestrator implements IDeployOrchestrator {
           stepRelease.error = error.message;
           this.finishStep(stepRelease);
           steps.push(stepRelease);
-          this.logger.warn(`Release 创建失败（不阻塞部署）: ${error.message}`);
+          this.logger.warn(`Release creation failed (does not block the deploy): ${error.message}`);
         }
       }
 
-      // ── 完成 ──
+      // ── Done ──
       this.currentStatus = 'success';
       const totalMs = Date.now() - startTime;
-      this.logger.info(`部署完成，耗时 ${(totalMs / 1000).toFixed(1)}s`);
+      this.logger.info(`Deploy finished in ${(totalMs / 1000).toFixed(1)}s`);
 
       return {
         success: true,
@@ -320,7 +321,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
       };
     } catch (error: any) {
       this.currentStatus = 'failed';
-      this.logger.error(`部署异常: ${error.message}`);
+      this.logger.error(`Deploy error: ${error.message}`);
       return {
         success: false,
         status: 'failed',
@@ -332,7 +333,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
   }
 
   // ================================================================
-  //  同步流程
+  //  Sync flow
   // ================================================================
 
   async sync(): Promise<DeployResult> {
@@ -340,7 +341,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
     const steps: DeployStep[] = [];
 
     try {
-      const stepPull = this.createStep('拉取远端更新');
+      const stepPull = this.createStep('Pulling remote updates');
       this.emit('idle', stepPull);
 
       const pullResult = await this.gitProvider.pull();
@@ -363,7 +364,7 @@ export class DeployOrchestrator implements IDeployOrchestrator {
   }
 
   // ================================================================
-  //  内部方法
+  //  Internal helpers
   // ================================================================
 
   private createStep(name: string): DeployStep {

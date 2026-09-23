@@ -1,5 +1,5 @@
 // ============================================================
-// GitHubAuthProvider — 实现 IAuthProvider
+// GitHubAuthProvider — implements IAuthProvider
 // ============================================================
 
 import type { IAuthProvider } from '@gitpilot/core';

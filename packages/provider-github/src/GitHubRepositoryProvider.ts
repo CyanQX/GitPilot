@@ -1,5 +1,5 @@
 // ============================================================
-// GitHubRepositoryProvider — 实现 IRepositoryProvider
+// GitHubRepositoryProvider — implements IRepositoryProvider
 // ============================================================
 
 import type { IRepositoryProvider } from '@gitpilot/core';
@@ -37,7 +37,7 @@ export class GitHubRepositoryProvider implements IRepositoryProvider {
 
   async deleteRepo(owner: string, repo: string): Promise<void> {
     await this.octokit.rest.repos.delete({ owner, repo });
-    this.logger.warn(`仓库已删除: ${owner}/${repo}`);
+    this.logger.warn(`Repository deleted: ${owner}/${repo}`);
   }
 
   async listBranches(owner: string, repo: string): Promise<Branch[]> {
@@ -59,8 +59,9 @@ export class GitHubRepositoryProvider implements IRepositoryProvider {
       const { data } = await this.octokit.rest.repos.getCommit({
         owner, repo, ref: `heads/${localBranch}`,
       });
-      // 简化实现：比较远端 HEAD 与本地（实际需要在 Git 层面比较）
-      return 0; // 远端检查委托给 Git Provider 的 fetch 逻辑
+      // Simplified implementation: compare the remote HEAD with the local one
+      // (the real comparison must happen at the Git layer)
+      return 0; // Remote check is delegated to the Git Provider's fetch logic
     } catch {
       return 0;
     }

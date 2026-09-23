@@ -1,6 +1,6 @@
 // ============================================================
 // GitPilot JetBrains — GitHubReleaseProvider (Kotlin)
-// GitHub Release 创建（对标 VS Code provider-github/GitHubReleaseProvider.ts）
+// GitHub Release creation (aligned with VS Code provider-github/GitHubReleaseProvider.ts)
 // ============================================================
 
 package com.gitpilot.core
