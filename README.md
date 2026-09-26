@@ -27,7 +27,7 @@
 | ⑤ | Back in VS Code, click **"Login with GitHub"** on the GitPilot panel |
 | ⑥ | Choose "🔑 Personal Access Token" → paste the token → press Enter |
 
-#### Method 2: Browser OAuth Login (I haven't tried this one myself — if it doesn't work, please report back!)
+#### Method 2: Browser OAuth Login
 
 | Step | Action |
 |------|--------|
@@ -251,15 +251,3 @@ cd packages/jetbrains-plugin
 | **Azure DevOps** | Add `packages/provider-azure/` | ~200 lines |
 | **Cursor IDE** | Add `packages/cursor-extension/` | Reuses most VS Code code |
 | **New secret rules** | Edit `patterns.yml` | 0 lines of code |
-
----
-
-## 📊 Architecture Scorecard
-
-| Dimension | Rating | Notes |
-|-----------|--------|-------|
-| Layered design | ⭐⭐⭐⭐⭐ | Core / Provider / Platform — three clear layers |
-| Interface abstraction | ⭐⭐⭐⭐⭐ | 8 interfaces covering all extension points |
-| Platform independence | ⭐⭐⭐⭐⭐ | Core has zero platform dependencies |
-| Extensibility | ⭐⭐⭐⭐⭐ | New platform = new Provider, no Core changes |
-| Maintainability | ⭐⭐⭐⭐⭐ | Externalized rules, Build doesn't guess |
